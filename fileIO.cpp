@@ -7,27 +7,6 @@
 #include "fileIO.h"
 
 namespace VOX_FileIO{
-/*
-class Tree_Node{
-private:
-    Tree_Node *children;
-public:
-    std::string content, label;
-    Tree_Node();
-    ~Tree_Node();
-    Tree_Node* getChild(std::string label);
-    void addChild(Tree_Node* child);
-};
-
-class Tree{
-private:
-    Tree_Node *head;
-    void parse(Tree_Node head, Tree_Node child, FILE *file);
-public:
-    Tree(FILE *file);
-    ~Tree();
-    std::string search(const char *path);
-};*/
 
     Tree_Node* Tree_Node::getChild(std::string label){
         Tree_Node *child;
@@ -128,23 +107,6 @@ std::string VOX_FileIO::getToken(FILE *file, int mode){
         }
     }
     return result;
-}
-
-VOX_World::Block VOX_FileIO::loadBlock(const char *fileName){
-    VOX_World::Block block;
-    if(fileName == 0){
-        std::cout << "loadBlock: null fileName provided" << std::endl;
-        return block;
-    }
-    FILE *file = fopen(fileName, "r");
-    if(file == 0){
-        std::cout << "loadBlock: File " << fileName << " not found." << std::endl;
-        return block;
-    }
-
-
-
-    return block;
 }
 
 /**

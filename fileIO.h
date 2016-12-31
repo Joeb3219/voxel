@@ -6,12 +6,10 @@
 #include <vector>
 #include <cstdlib>
 #include <string>
-#include "world.h"
 
 namespace VOX_FileIO{
 
     GLuint loadBitmapTexture(const char *fileName);
-    VOX_World::Block loadBlock(const char *fileName);
     std::string getToken(FILE *file, int mode = 0);
     std::string getLabelFromTag(std::string tag);
 

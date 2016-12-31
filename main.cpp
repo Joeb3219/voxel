@@ -1,17 +1,24 @@
 #include <iostream>
+#include <vector>
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 #include <sys/time.h>
 #include "main.h"
 #include "camera.h"
 #include "renderable.h"
-#include "fileIO.h"
+#include "world.h"
 
 long int getCurrentTime(){
     struct timeval tp;
     gettimeofday(&tp, NULL);
     long int currentTime = tp.tv_sec * 1000 + tp.tv_usec / 1000;
     return currentTime;
+}
+
+std::vector<VOX_World::Block> initBlocks(){
+    std::vector<VOX_World::Block> blocks;
+    blocks.push_back(VOX_World::Block("res/blocks/base.txt"));
+    return blocks;
 }
 
 int main(){
@@ -22,8 +29,8 @@ int main(){
     long int timeSinceFPSCalculation = currentTime;
     int frames = 0;
 
-    VOX_FileIO::Tree tree(fopen("res/blocks/base.txt", "r"));
-    std::cout << tree.search(std::string("block:data:id")) << std::endl;
+    std::vector<VOX_World::Block> blocks = initBlocks();
+
     VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
     bool running = true;
     while (running){
@@ -32,6 +39,7 @@ int main(){
         for(float x = -5; x <= 5; x ++){
             for(float y = -5; y <= 5; y ++){
                 for(float z = -5; z <= 5; z ++){
+                    glBindTexture(GL_TEXTURE_2D, blocks.at(0).texture);
                     cube.render(x*3, y*3, z*3);
                 }
             }

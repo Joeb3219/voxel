@@ -1,28 +1,29 @@
 #include <SFML/OpenGL.hpp>
+#include <string>
 
 namespace VOX_World{
 
-    class World{
-    private:
-    //    Region *regions;
+    class Block{
     public:
-        World(int seed);
-        void render();
+        Block(const char *str);
+        int id, meta;
+        const char *name;
+        GLuint texture;
     };
 
     class Region{
     private:
         float x, z;
     public:
-        void render();
+    //    void render();
     };
 
-    class Block{
+    class World{
     private:
+//        Region *regions;
     public:
-        int id, meta;
-        char *name;
-        GLuint texture;
+    //    World(int seed);
+    //    void render();
     };
 
 }

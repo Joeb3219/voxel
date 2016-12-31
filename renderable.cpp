@@ -15,46 +15,46 @@ namespace VOX_Graphics{
     	glNewList(DL_ID,GL_COMPILE);
         glBegin(GL_QUADS);          // TOP
             glNormal3f(0.0f, 1.0f, 0.0f);
-            glVertex3f(-size, size, size);
-            glVertex3f(size, size, size);
-            glVertex3f(size, size, -size);
-            glVertex3f(-size, size, -size);
+            glTexCoord2f(0.25f, 0.75f); glVertex3f(-size, size, size);
+            glTexCoord2f(0.50f, 0.75f); glVertex3f(size, size, size);
+            glTexCoord2f(0.50f, 1.0f); glVertex3f(size, size, -size);
+            glTexCoord2f(0.25f, 1.0f); glVertex3f(-size, size, -size);
         glEnd();
         glBegin(GL_QUADS);          // FRONT
             glNormal3f(0.0f, 0.0f, 1.0f);
-            glVertex3f(-size, -size, size);
-            glVertex3f(size, -size, size);
-            glVertex3f(size, size, size);
-            glVertex3f(-size, size, size);
+            glTexCoord2f(0.25f, 0.50f); glVertex3f(-size, -size, size);
+            glTexCoord2f(0.50f, 0.50f); glVertex3f(size, -size, size);
+            glTexCoord2f(0.50f, 0.75f); glVertex3f(size, size, size);
+            glTexCoord2f(0.25f, 0.75f); glVertex3f(-size, size, size);
         glEnd();
 
         glBegin(GL_QUADS);          // RIGHT
             glNormal3f(1.0f, 0.0f, 0.0f);
-            glVertex3f(size, -size, size);
-            glVertex3f(size, -size, -size);
-            glVertex3f(size, size, -size);
-            glVertex3f(size, size, size);
+            glTexCoord2f(0.50f, 0.50f); glVertex3f(size, -size, size);
+            glTexCoord2f(0.75f, 0.50f); glVertex3f(size, -size, -size);
+            glTexCoord2f(0.75f, 0.75f); glVertex3f(size, size, -size);
+            glTexCoord2f(0.50f, 0.75f); glVertex3f(size, size, size);
         glEnd();
         glBegin(GL_QUADS);          // LEFT
             glNormal3f(-1.0f, 0.0f, 0.0f);
-            glVertex3f(-size, -size, size);
-            glVertex3f(-size, size, size);
-            glVertex3f(-size, size, -size);
-            glVertex3f(-size, -size, -size);
+            glTexCoord2f(0.0f, 0.50f); glVertex3f(-size, -size, -size);
+            glTexCoord2f(0.25f, 0.50f); glVertex3f(-size, -size, size);
+            glTexCoord2f(0.25f, 0.75f); glVertex3f(-size, size, size);
+            glTexCoord2f(0.0f, 0.75f); glVertex3f(-size, size, -size);
         glEnd();
         glBegin(GL_QUADS);          // BOTTOM
             glNormal3f(0.0f, -1.0f, 0.0f);
-            glVertex3f(-size, -size, size);
-            glVertex3f(size, -size, size);
-            glVertex3f(size, -size, -size);
-            glVertex3f(-size, -size, -size);
+            glTexCoord2f(0.25f, 0.25f); glVertex3f(-size, -size, size);
+            glTexCoord2f(0.50f, 0.25f); glVertex3f(size, -size, size);
+            glTexCoord2f(0.50f, 0.50f); glVertex3f(size, -size, -size);
+            glTexCoord2f(0.25f, 0.50f); glVertex3f(-size, -size, -size);
         glEnd();
         glBegin(GL_QUADS);          // BACK
             glNormal3f(0.0f, 0.0f, -1.0f);
-            glVertex3f(size, size, -size);
-            glVertex3f(size, -size, -size);
-            glVertex3f(-size, -size, -size);
-            glVertex3f(-size, size, -size);
+            glTexCoord2f(0.75f, 0.50f); glVertex3f(size, -size, -size);
+            glTexCoord2f(1.0f, 0.50f); glVertex3f(-size, -size, -size);
+            glTexCoord2f(1.0f, 0.75f); glVertex3f(-size, size, -size);
+            glTexCoord2f(0.75f, 0.75f); glVertex3f(size, size, -size);
         glEnd();
         glEndList();
     }
