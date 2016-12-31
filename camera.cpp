@@ -59,7 +59,7 @@ void Camera::update(){
     if(rY > 90) rY = 90;
     if(rY < -90) rY = -90;
 
-    std::cout << "{x,y,z} " << x << ", " << y << ", " << z << std::endl;
+    //std::cout << "{x,y,z} " << x << ", " << y << ", " << z << std::endl;
 }
 
 sf::Vector3f Camera::getCurrentPosition(){

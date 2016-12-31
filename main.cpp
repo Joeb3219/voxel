@@ -5,6 +5,7 @@
 #include "main.h"
 #include "camera.h"
 #include "renderable.h"
+#include "fileIO.h"
 
 long int getCurrentTime(){
     struct timeval tp;
@@ -21,9 +22,10 @@ int main(){
     long int timeSinceFPSCalculation = currentTime;
     int frames = 0;
 
+    VOX_FileIO::Tree tree(fopen("res/blocks/base.txt", "r"));
+    std::cout << tree.search(std::string("block:data:id")) << std::endl;
     VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
     bool running = true;
-
     while (running){
         running = camera->handleEvents();
         camera->preRender();
@@ -39,7 +41,7 @@ int main(){
         while((currentTime + msPerTick) < getCurrentTime()){
             camera->update();
             currentTime += msPerTick;
-            std::cout << "FPS: " << fps << std::endl;
+            //std::cout << "FPS: " << fps << std::endl;
         }
         if(frames > 400){
             fps = (frames / ((getCurrentTime() - timeSinceFPSCalculation) / 1000.0));

@@ -1,0 +1,7 @@
+<block>
+    <data>
+        <name>Base</name>
+        <id>0:0</id>
+        <texture>res/base.bmp</texture>
+    </data>
+</block>

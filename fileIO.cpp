@@ -1,9 +1,151 @@
 #include <iostream>
 #include <SFML/OpenGL.hpp>
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include "fileIO.h"
+
+namespace VOX_FileIO{
+/*
+class Tree_Node{
+private:
+    Tree_Node *children;
+public:
+    std::string content, label;
+    Tree_Node();
+    ~Tree_Node();
+    Tree_Node* getChild(std::string label);
+    void addChild(Tree_Node* child);
+};
+
+class Tree{
+private:
+    Tree_Node *head;
+    void parse(Tree_Node head, Tree_Node child, FILE *file);
+public:
+    Tree(FILE *file);
+    ~Tree();
+    std::string search(const char *path);
+};*/
+
+    Tree_Node* Tree_Node::getChild(std::string label){
+        Tree_Node *child;
+        for(unsigned int i = 0; i < children.size(); i ++){
+            child = children[i];
+            if(child->label.compare(label) == 0) return child;
+        }
+        return 0;
+    }
+
+    Tree_Node::~Tree_Node(){
+        for(Tree_Node *t : children) delete t;
+    }
+
+    void Tree_Node::addChild(Tree_Node *child){
+        children.push_back(child);
+    }
+
+    Tree::Tree(FILE *file){
+        this->head = new Tree_Node;
+        head->label = std::string("head");
+        parse(this->head, file);
+    }
+
+    Tree::~Tree(){
+        delete head;
+    }
+
+    std::string Tree::search(std::string path){
+        std::string currentSearch;
+        Tree_Node *ptr = this->head, *temp;
+        while(ptr != 0 && !path.empty()){
+            currentSearch = path.substr(0, path.find_first_of(":"));
+            path = path.substr(path.find_first_of(":") + 1, path.size());
+            temp = ptr->getChild(currentSearch);
+            if(temp == 0) return ptr->content;
+            ptr = temp;
+        }
+        if(ptr != 0) return ptr->content;
+        return std::string("");
+    }
+
+    void Tree::parse(Tree_Node *parent, FILE *file){
+        std::string token, label;
+        while((token = getToken(file)).empty() == false){
+            label = getLabelFromTag(token);
+            if(label.compare(token) == 0){ // If the label is the same as the token, it's not a tag.
+                parent->content = label;
+                getToken(file); // Consume the next token, which will close this one.
+                return;
+            }else{     // We are dealing with a tag
+                if(label.compare(parent->label) == 0){  // This is the close tag
+                    return;
+                }else{
+                    Tree_Node *child = new Tree_Node;
+                    child->label = label;
+                    parent->addChild(child);
+                    parse(child, file);
+                }
+            }
+        }
+    }
+
+
+}
+
+std::string VOX_FileIO::getLabelFromTag(std::string tag){
+    if(tag.size() < 2 || (tag.size() >= 1 && tag.at(0) != '<')) return tag;
+    std::string result = tag.substr(1, tag.size() - 2);
+    if(result.size() >= 1 && result.at(0) == '/') result = result.substr(1, result.size());
+    return result;
+}
+
+std::string VOX_FileIO::getToken(FILE *file, int mode){
+    std::string result("");
+    char c;
+    bool beganTag = false, beganChars = false;
+    while( (c = fgetc(file)) != EOF ){
+        if(c == '\0') break;
+        if(c == '\n'){
+            if(result.empty()) continue;
+            else break;
+        }
+        if(c == '\t' || (!beganChars && c == ' ')) continue;
+        if(c == '<'){
+            if(result.empty()){
+                beganChars = true;
+                beganTag = true;
+                result += c;
+            }else{
+                fseek(file, -1, SEEK_CUR);
+                break;
+            }
+        }else{
+            beganChars = true;
+            result += c;
+            if(c == '>' && beganTag == true) break;
+        }
+    }
+    return result;
+}
+
+VOX_World::Block VOX_FileIO::loadBlock(const char *fileName){
+    VOX_World::Block block;
+    if(fileName == 0){
+        std::cout << "loadBlock: null fileName provided" << std::endl;
+        return block;
+    }
+    FILE *file = fopen(fileName, "r");
+    if(file == 0){
+        std::cout << "loadBlock: File " << fileName << " not found." << std::endl;
+        return block;
+    }
+
+
+
+    return block;
+}
 
 /**
  *  Converts a bitmap file into a Texture.
