@@ -21,11 +21,19 @@ int main(){
     long int timeSinceFPSCalculation = currentTime;
     int frames = 0;
 
+    VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
     bool running = true;
 
     while (running){
         running = camera->handleEvents();
         camera->preRender();
+        for(float x = -5; x <= 5; x ++){
+            for(float y = -5; y <= 5; y ++){
+                for(float z = -5; z <= 5; z ++){
+                    cube.render(x*3, y*3, z*3);
+                }
+            }
+        }
         frames ++;
         camera->postRender();
         while((currentTime + msPerTick) < getCurrentTime()){

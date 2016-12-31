@@ -12,10 +12,7 @@
 #define FOV 70
 
 Camera::Camera(int width, int height){
-    x = 213;
-    y = 134;
-    z = 256;
-    rX = rY = rZ = 0.0f;
+    x = y = z = rX = rY = rZ = 0.0f;
     this->width = width;
     this->height = height;
     sf::Window *window = new sf::Window(sf::VideoMode(width, height), "Joeb3219 | FPS", sf::Style::Default, sf::ContextSettings(32));
