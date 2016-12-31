@@ -110,10 +110,6 @@ void Camera::gluPerspective(float fov, float aspectRatio, float near, float far)
     glFrustum(-fW, fW, -fH, fH, near, far);
 }
 
-void Camera::render(VOX_Graphics::Renderable& r){
-    r.render();
-}
-
 // Handles events of the screen, and then returns true if program should continue executing, or false otherwise.
 bool Camera::handleEvents(){
     sf::Event event;

@@ -8,27 +8,19 @@ namespace VOX_Graphics{
 
     class Renderable{
     public:
-        virtual void render() = 0;
+        virtual void render(float x, float y, float z) = 0;
         float x, y;
     };
 
-    class Ground : public Renderable{
+    class Cube{
     private:
-        double *terrainHeights;
-        double *terrainNormals;
-        double *terrainColors;
-        GLuint DL_ID;
-        GLuint generateDL();
-        int size;
+        Cube();
+        int DL_ID;
     public:
-        Ground(int size, int seed);
-        double getHeight(float x, float z);
-        void modifyHeight(float x, float z, float val);
-        void generateColorsAndDisplay();
-        ~Ground();
-        void render();
-        float x, y;
+        static Cube &getInstance();
+        void render(float x, float y, float z);
     };
+
 }
 
 #endif
