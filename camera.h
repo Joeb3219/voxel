@@ -26,8 +26,6 @@ public:
     void update(sf::Vector3f cameraPos, sf::Vector3f angle);
     sf::Vector2i getRelativeMousePosition();
     ~Camera();
-//    sf::Vector3f getCurrentPosition();
-    sf::Vector3f getLookingAt();
 };
 
 #endif

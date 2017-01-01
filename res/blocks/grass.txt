@@ -4,5 +4,6 @@
         <id>1:0</id>
         <texture>res/grass.bmp</texture>
         <visible>true</visible>
+        <solid>true</solid>
     </data>
 </block>

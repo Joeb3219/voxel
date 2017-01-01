@@ -32,15 +32,6 @@ void Camera::update(sf::Vector3f cameraPos, sf::Vector3f angle){
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::P)) mouseGrabbed = !mouseGrabbed;
 }
 
-sf::Vector3f Camera::getLookingAt(){
-    float rYRadians = (PI / 180.0) * rY;
-    float rXRadians = (PI / 180.0) * (rX + 90);
-    float xPrime = x - ((float) cos(rXRadians) * 8.f * fabs(cos(rYRadians)));
-    float yPrime = y - ((float) sin(rYRadians) * 8.f);
-    float zPrime = z - ((float) sin(rXRadians) * 8.f * fabs(cos(rYRadians)));
-    return sf::Vector3f(xPrime, yPrime, zPrime);
-}
-
 sf::Vector2i Camera::getRelativeMousePosition(){
     if(!mouseGrabbed) return sf::Vector2i(0, 0);
     sf::Vector2i vec = sf::Mouse::getPosition(*screen);
@@ -103,7 +94,7 @@ void Camera::preRender(){
 	glRotatef(rY, 1, 0, 0);
 	glRotatef(rX, 0, 1, 0);
 	glRotatef(rZ, 0, 0, 1);
-	glTranslatef(-x, -y, -z);
+	glTranslatef(-x, -(y + 2), -z);
     glMatrixMode(GL_MODELVIEW);
 }
 

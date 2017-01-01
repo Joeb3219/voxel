@@ -21,17 +21,17 @@ namespace VOX_World{
         Block();
         int id, meta;
         std::string name;
-        bool visible;
+        bool visible, solid;
         GLuint texture;
     };
 
     class Region{
     private:
-        float xOffset, zOffset;
         int DL_ID;
         void buildDisplayList();
     public:
         bool needsUpdate;
+        int xOffset, zOffset;
         Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture);
         Biome biome;
         Block blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
@@ -47,6 +47,9 @@ namespace VOX_World{
         static std::vector<Block> blocks;
         World(int seed = 0);
         ~World();
+        Region* getRegion(float x, float y, float z);
+        Block getBlock(float x, float y, float z);
+        void setBlock(float x, float y, float z, Block block);
         void update();
         void render();
     };
@@ -70,6 +73,7 @@ namespace VOX_World{
         sf::Vector3f getPosition();
         sf::Vector3f getViewAngles();
         void setMouseChange(sf::Vector2i change);
+        sf::Vector3f getLookingAt(bool adjacent = false);
         void update();
         void render();
     };

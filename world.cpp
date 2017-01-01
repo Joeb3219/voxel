@@ -107,11 +107,12 @@ namespace VOX_World{
             return;
         }
         VOX_FileIO::Tree data(file);
-        std::string string_id, string_name, string_texture, string_visible;
+        std::string string_id, string_name, string_texture, string_visible, string_solid;
         string_id = data.search("block:data:id");
         string_name = data.search("block:data:name");
         string_texture = data.search("block:data:texture");
         string_visible = data.search("block:data:visible");
+        string_solid = data.search("block:data:solid");
 
         if(!string_id.empty()) id = atoi(string_id.c_str());
         if(!string_name.empty()) name = string_name;
@@ -119,6 +120,8 @@ namespace VOX_World{
         else texture = 0;
         if(!string_visible.empty() && std::string("true").compare(string_visible) == 0) visible = true;
         else visible = false;
+        if(!string_solid.empty() && std::string("true").compare(string_solid) == 0) solid = true;
+        else solid = false;
     }
 
     Biome getBiome(double elevation, double moisture){
@@ -134,6 +137,45 @@ namespace VOX_World{
     void World::render(){
         for(unsigned int i = 0; i < regions.size(); i ++){
             regions.at(i)->render();
+        }
+    }
+
+    Region* World::getRegion(float x, float y, float z){
+        int xPrime = (int) x;
+        int zPrime = (int) z;
+        int xRegion = ((xPrime + REGION_SIZE - 1) / REGION_SIZE * REGION_SIZE) - REGION_SIZE;
+        int zRegion = ((zPrime + REGION_SIZE - 1) / REGION_SIZE * REGION_SIZE) - REGION_SIZE;
+        for(unsigned int i = 0; i < regions.size(); i ++){
+            if(regions[i]->xOffset == xRegion && regions[i]->zOffset == zRegion) return regions[i];
+        }
+        return 0;
+    }
+
+    Block World::getBlock(float x, float y, float z){
+        int xPrime = (int) x;
+        int yPrime = (int) y;
+        int zPrime = (int) z;
+        if(yPrime >= WORLD_HEIGHT || yPrime < 0) return World::blocks.at(BlockIds::AIR);
+        Region *r = getRegion(x, y, z);
+        if(r != 0){
+            xPrime -= (r->xOffset);
+            zPrime -= (r->zOffset);
+            return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime];
+        }
+        return World::blocks.at(BlockIds::AIR);
+    }
+
+    void World::setBlock(float x, float y, float z, Block block){
+        int xPrime = (int) x;
+        int yPrime = (int) y;
+        int zPrime = (int) z;
+        if(yPrime >= WORLD_HEIGHT || y < 0) return;
+        Region *r = getRegion(x, y, z);
+        if(r != 0){
+            xPrime -= (r->xOffset);
+            zPrime -= (r->zOffset);
+            r->blocks[yPrime][xPrime * REGION_SIZE + zPrime] = block;
+            r->needsUpdate = true;
         }
     }
 
@@ -170,7 +212,40 @@ namespace VOX_World{
         rY -= (change.y * 0.08);
     }
 
+    sf::Vector3f Player::getLookingAt(bool adjacent){
+        int steps = 32; // Moves roughly 1/4 of a block at a time.
+        sf::Vector3f currentPos = getPosition();
+        currentPos.y += 2;
+        sf::Vector3f lookingAt;
+        float rYRadians = (PI / 180.0) * rY;
+        float rXRadians = (PI / 180.0) * (rX + 90);
+        lookingAt.x = x - ((float) cos(rXRadians) * 8.f * fabs(cos(rYRadians)));
+        lookingAt.y = (y + 2) - ((float) sin(rYRadians) * 8.f);
+        lookingAt.z = z - ((float) sin(rXRadians) * 8.f * fabs(cos(rYRadians)));
+        sf::Vector3f stepVector = (currentPos - lookingAt) * (1.0f / steps);
+        // Now we hone into the vector to find a collision.
+        for(int i = 0; i < steps; i ++){
+            currentPos -= stepVector;
+            if(world->getBlock(currentPos.x, currentPos.y, currentPos.z).solid){
+                if(!adjacent) return currentPos;
+                return (currentPos + stepVector);
+            }
+        }
+        return lookingAt;
+    }
+
     void Player::update(){
+        sf::Vector3f lookingAt = getLookingAt();
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)){
+            world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::AIR));
+        }
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Right)){
+            if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).id != World::blocks.at(BlockIds::AIR).id){
+                lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
+                world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::DIRT));
+            }
+        }
+        std::cout << "Currently looking at block " << world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).name << std::endl;
         float rYRadians = (PI / 180.0) * rY;
         float rXRadians = (PI / 180.0) * (rX + 90);
         float rXAdjustedRadians = (PI / 180.0) * (rX);

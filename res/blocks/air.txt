@@ -3,5 +3,6 @@
         <name>Air</name>
         <id>0:0</id>
         <visible>false</visible>
+        <solid>false</solid>
     </data>
 </block>
