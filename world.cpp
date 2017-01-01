@@ -12,7 +12,7 @@ namespace VOX_World{
     std::vector<Block> World::blocks;
 
     Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture){
-        this->valid = false;
+        this->needsUpdate = true;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
         double heightMap[REGION_SIZE * REGION_SIZE];
@@ -30,12 +30,11 @@ namespace VOX_World{
 
         this->biome = getBiome(elevationAverage, moistureAverage);
         std::cout << "Moisture average " << moistureAverage << ", Elevation average: " << elevationAverage << std::endl;
-
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    if(y < heightMap[x*REGION_SIZE + z]*48) blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(1);
-                    else blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(0);
+                    if(y < heightMap[x*REGION_SIZE + z]*48) blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::GRASS);
+                    else blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::AIR);
                 }
             }
         }
@@ -77,12 +76,22 @@ namespace VOX_World{
         return false;
     }
 
-    void Region::render(){
-        if(!valid){
-            buildDisplayList();
-            valid = true;
+    void Region::update(){
+        int ind;
+        for(int x = 0; x < REGION_SIZE; x ++){
+            for(int y = 0; y < WORLD_HEIGHT; y ++){
+                for(int z = 0; z < REGION_SIZE; z ++){
+                    ind = x*REGION_SIZE + z;
+                    if(blocks[y][ind].id == BlockIds::GRASS && blocks[y + 1][ind].visible == true) blocks[y][ind] = World::blocks.at(BlockIds::DIRT);
+                }
+            }
         }
-        glCallList(DL_ID);
+        buildDisplayList();
+        needsUpdate = false;
+    }
+
+    void Region::render(){
+        if(DL_ID != 0) glCallList(DL_ID);
     }
 
     Block::Block(){
@@ -114,6 +123,12 @@ namespace VOX_World{
         return GRASSLAND;
     }
 
+    void World::update(){
+        for(unsigned int i = 0; i < regions.size(); i ++){
+            if(regions.at(i)->needsUpdate) regions.at(i)->update();
+        }
+    }
+
     void World::render(){
         for(unsigned int i = 0; i < regions.size(); i ++){
             regions.at(i)->render();
@@ -132,6 +147,12 @@ namespace VOX_World{
         regions.push_back(new Region(1, 0, &height, &moisture));
         regions.push_back(new Region(0, 1, &height, &moisture));
         regions.push_back(new Region(1, 1, &height, &moisture));
+    }
+
+    World::~World(){
+        for(unsigned int i = 0; i < regions.size(); i ++){
+            delete regions[i];
+        }
     }
 
 }

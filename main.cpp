@@ -19,6 +19,7 @@ std::vector<VOX_World::Block> initBlocks(){
     std::vector<VOX_World::Block> blocks;
     blocks.push_back(VOX_World::Block("res/blocks/air.txt"));
     blocks.push_back(VOX_World::Block("res/blocks/grass.txt"));
+    blocks.push_back(VOX_World::Block("res/blocks/dirt.txt"));
     return blocks;
 }
 
@@ -43,6 +44,7 @@ int main(){
         while((currentTime + msPerTick) < getCurrentTime()){
             camera->update();
             currentTime += msPerTick;
+            world.update();
             std::cout << "FPS: " << fps << std::endl;
         }
         if(frames > 100){

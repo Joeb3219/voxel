@@ -8,6 +8,8 @@
 
 namespace VOX_World{
 
+    enum BlockIds{AIR = 0, GRASS = 1, DIRT = 2};
+
     enum Biome{GRASSLAND};
 
     Biome getBiome(double elevation, double moisture);
@@ -26,13 +28,14 @@ namespace VOX_World{
     private:
         float xOffset, zOffset;
         int DL_ID;
-        bool valid;
         void buildDisplayList();
     public:
+        bool needsUpdate;
         Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture);
         Biome biome;
         Block blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         void render();
+        void update();
         bool isBlockVisible(int x, int y, int z);
     };
 
@@ -42,6 +45,8 @@ namespace VOX_World{
     public:
         static std::vector<Block> blocks;
         World(int seed = 0);
+        ~World();
+        void update();
         void render();
     };
 
