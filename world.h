@@ -4,7 +4,7 @@
 #include "lib/fastNoise/FastNoise.h"
 
 #define WORLD_HEIGHT 128
-#define REGION_SIZE 32
+#define REGION_SIZE 16
 
 namespace VOX_World{
 
