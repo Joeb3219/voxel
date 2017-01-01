@@ -29,7 +29,7 @@ namespace VOX_World{
         bool valid;
         void buildDisplayList();
     public:
-        Region(float xOffset, float zOffset, FastNoise height, FastNoise moisture);
+        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture);
         Biome biome;
         Block blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         void render();
@@ -38,7 +38,7 @@ namespace VOX_World{
 
     class World{
     private:
-        std::vector<Region> regions;
+        std::vector<Region*> regions;
     public:
         static std::vector<Block> blocks;
         World(int seed = 0);

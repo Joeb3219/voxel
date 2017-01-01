@@ -11,7 +11,7 @@ namespace VOX_World{
 
     std::vector<Block> World::blocks;
 
-    Region::Region(float xOffset, float zOffset, FastNoise height, FastNoise moisture){
+    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture){
         this->valid = false;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
@@ -19,9 +19,9 @@ namespace VOX_World{
         double moistureAverage = 0.0, elevationAverage = 0.0;
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
-                heightMap[x*REGION_SIZE + z] = VOX_Math::convertScale(height.GetNoise(x,z), -1.0f, 1.f, 0.0f, 1.f);
+                heightMap[x*REGION_SIZE + z] = VOX_Math::convertScale(height->GetNoise(x + this->xOffset,z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
                 elevationAverage += heightMap[x*REGION_SIZE + z];
-                moistureAverage += VOX_Math::convertScale(moisture.GetNoise(x,z), -1.0f, 1.f, 0.0f, 1.f);
+                moistureAverage += VOX_Math::convertScale(moisture->GetNoise(x + this->xOffset, z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
             }
         }
 
@@ -34,7 +34,7 @@ namespace VOX_World{
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    if(y < heightMap[x*REGION_SIZE + z]*32) blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(1);
+                    if(y < heightMap[x*REGION_SIZE + z]*48) blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(1);
                     else blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(0);
                 }
             }
@@ -67,12 +67,13 @@ namespace VOX_World{
 
     bool Region::isBlockVisible(int x, int y, int z){
         if(!blocks[y][(x * REGION_SIZE) + z].visible) return false;                         // Check if this is visible
-        if(y < WORLD_HEIGHT && !blocks[y + 1][(x * REGION_SIZE) + z].visible) return true;  // Check if above is visible
-        if(y > 0 && !blocks[y - 1][(x * REGION_SIZE) + z].visible) return true;             // Check if below is visible
-        if(x != REGION_SIZE && !blocks[y][((x + 1) * REGION_SIZE) + z].visible) return true;// Check if right is visible
-        if(x != 0 && !blocks[y][((x - 1) * REGION_SIZE) + z].visible) return true;          // Check if left is visible
-        if(z != 0 && !blocks[y][((x) * REGION_SIZE) + z - 1].visible) return true;          // Check if behind is visible
-        if(z != REGION_SIZE && !blocks[y][((x) * REGION_SIZE) + z + 1].visible) return true;// Check if forward is visible
+        if(y == 0 || y == WORLD_HEIGHT || x == 0 || x == REGION_SIZE - 1 || z == 0 || z == REGION_SIZE - 1) return true;
+        if(!blocks[y + 1][(x * REGION_SIZE) + z].visible) return true;  // Check if above is visible
+        if(!blocks[y - 1][(x * REGION_SIZE) + z].visible) return true;             // Check if below is visible
+        if(!blocks[y][((x + 1) * REGION_SIZE) + z].visible) return true;// Check if right is visible
+        if(!blocks[y][((x - 1) * REGION_SIZE) + z].visible) return true;          // Check if left is visible
+        if(!blocks[y][((x) * REGION_SIZE) + z - 1].visible) return true;          // Check if behind is visible
+        if(!blocks[y][((x) * REGION_SIZE) + z + 1].visible) return true;// Check if forward is visible
         return false;
     }
 
@@ -115,7 +116,7 @@ namespace VOX_World{
 
     void World::render(){
         for(unsigned int i = 0; i < regions.size(); i ++){
-            regions.at(i).render();
+            regions.at(i)->render();
         }
     }
 
@@ -127,8 +128,10 @@ namespace VOX_World{
         moisture.SetNoiseType(FastNoise::SimplexFractal);
         moisture.SetSeed(seed * 2);
         moisture.SetFractalOctaves(8);
-        Region r(0, 0, height, moisture);
-        regions.push_back(r);
+        regions.push_back(new Region(0, 0, &height, &moisture));
+        regions.push_back(new Region(1, 0, &height, &moisture));
+        regions.push_back(new Region(0, 1, &height, &moisture));
+        regions.push_back(new Region(1, 1, &height, &moisture));
     }
 
 }
