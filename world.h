@@ -6,6 +6,7 @@
 
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 16
+#define TYPICAL_GROUND 48
 
 namespace VOX_World{
 
@@ -50,6 +51,7 @@ namespace VOX_World{
         Region* getRegion(float x, float y, float z);
         Block getBlock(float x, float y, float z);
         void setBlock(float x, float y, float z, Block block);
+        sf::Vector3f getCollision(sf::Vector3f start, sf::Vector3f end);
         void update();
         void render();
     };
@@ -66,8 +68,10 @@ namespace VOX_World{
     class Player : public Mob{
     private:
         float x, y, z, rX, rY, rZ;
+        float yVelocity = 0;
+        int tickCounter = 0;
         World *world;
-        float moveSpeed = 0.5f;
+        float moveSpeed = 0.05f;
     public:
         Player(World *world, float x, float y, float z);
         sf::Vector3f getPosition();

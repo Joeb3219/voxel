@@ -35,7 +35,7 @@ int main(){
     VOX_World::World *world = new VOX_World::World(1337);
     VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
 
-    VOX_World::Player player(world, 8.f, 64.f, 8.f);
+    VOX_World::Player player(world, 8.f, 90.f, 8.f);
 
     bool running = true;
     while (running){

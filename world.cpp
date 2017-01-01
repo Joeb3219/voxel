@@ -34,9 +34,12 @@ namespace VOX_World{
         std::cout << "Moisture average " << moistureAverage << ", Elevation average: " << elevationAverage << std::endl;
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
+                int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    if(y < heightMap[x*REGION_SIZE + z]*48) blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::GRASS);
-                    else blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::AIR);
+                    if(y >= totalHeight) blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::AIR);
+                    else{
+                        blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::GRASS);
+                    }
                 }
             }
         }
@@ -179,6 +182,16 @@ namespace VOX_World{
         }
     }
 
+    sf::Vector3f World::getCollision(sf::Vector3f start, sf::Vector3f end){
+        sf::Vector3f stepVector = start - end;
+        int steps = abs(end.y - start.y) * 8;
+        for(int i = 0; i < steps; i ++){
+            if(i != 0) start -= stepVector;
+            if(getBlock(start.x, start.y, start.z).solid == true) return start;
+        }
+        return end;
+    }
+
     World::World(int seed){
         FastNoise height, moisture;
         height.SetNoiseType(FastNoise::SimplexFractal);
@@ -188,9 +201,9 @@ namespace VOX_World{
         moisture.SetSeed(seed * 2);
         moisture.SetFractalOctaves(8);
         regions.push_back(new Region(0, 0, &height, &moisture));
-        regions.push_back(new Region(1, 0, &height, &moisture));
-        regions.push_back(new Region(0, 1, &height, &moisture));
-        regions.push_back(new Region(1, 1, &height, &moisture));
+        //regions.push_back(new Region(1, 0, &height, &moisture));
+        //regions.push_back(new Region(0, 1, &height, &moisture));
+        //regions.push_back(new Region(1, 1, &height, &moisture));
     }
 
     World::~World(){
@@ -235,12 +248,40 @@ namespace VOX_World{
     }
 
     void Player::update(){
+        tickCounter ++;
+        std::cout << "[x,y,z,yVel]: " << x << "," << y << "," << z << "," << yVelocity << std::endl;
+
+        // Jumping / falling code.
+        float newY = y;
+        VOX_Math::calculateFalling(&newY, &yVelocity, 1);
+        if(newY < y){
+            for(float j = y; j > newY; j -= 0.0125f){
+                y = j;
+                if(world->getBlock(x, j, z).solid == true){
+                    yVelocity = 0;
+                    y = (float) ((int) y);
+                    break;
+                }
+            }
+        }else{
+            for(float j = y; j < newY; j += 0.0125f){
+                y = j;
+                if(world->getBlock(x, j + 2, z).solid == true){
+                    yVelocity = 0;
+                    y = (float) ((int) j + 2);
+                    break;
+                }
+            }
+        }
+
         sf::Vector3f lookingAt = getLookingAt();
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)){
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 15){
+            tickCounter = 0;
             world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::AIR));
         }
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Right)){
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 15){
             if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).id != World::blocks.at(BlockIds::AIR).id){
+                tickCounter = 0;
                 lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
                 world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::DIRT));
             }
@@ -259,16 +300,17 @@ namespace VOX_World{
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
             x += (float) cos(rXRadians) * moveSpeed * fabs(cos(rYRadians));
-            y += (float) sin(rYRadians) * moveSpeed;
+            //y += (float) sin(rYRadians) * moveSpeed;
             z += (float) sin(rXRadians) * moveSpeed * fabs(cos(rYRadians));
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
             x -= (float) cos(rXRadians) * moveSpeed * fabs(cos(rYRadians));
-            y -= (float) sin(rYRadians) * moveSpeed;
+            //y -= (float) sin(rYRadians) * moveSpeed;
             z -= (float) sin(rXRadians) * moveSpeed * fabs(cos(rYRadians));
         }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::U)) y+= moveSpeed;
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::J)) y-= moveSpeed;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+            if(yVelocity == 0.0f) yVelocity = 0.25f;
+        }
         if(rX > 360) rX -= 360;
         if(rX < 0) rX += 360;
         if(rY > 90) rY = 90;
