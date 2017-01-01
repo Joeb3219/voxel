@@ -5,7 +5,6 @@
 #include "camera.h"
 #include "renderable.h"
 
-#define MOVE_SPEED 0.5
 #define PI 3.14159265
 #define NEARCLIP 0.001
 #define FARCLIP 400.0
@@ -22,48 +21,15 @@ Camera::Camera(int width, int height){
     sf::Mouse::setPosition(sf::Vector2i(width / 2, height / 2), *screen);
 }
 
-void Camera::update(){
-    if(!focused) return;
-    sf::Vector2i mouseChange = getRelativeMousePosition();
-    if(mouseGrabbed){
-        rX += (mouseChange.x * 0.08);
-        rY -= (mouseChange.y * 0.08);
-        sf::Mouse::setPosition(sf::Vector2i(width / 2, height / 2), *screen);
-    }
+void Camera::update(sf::Vector3f cameraPos, sf::Vector3f angle){
+    this->x = cameraPos.x;
+    this->y = cameraPos.y;
+    this->z = cameraPos.z;
+    this->rX = angle.x;
+    this->rY = angle.y;
+    this->rZ = angle.z;
+    if(mouseGrabbed) sf::Mouse::setPosition(sf::Vector2i(width / 2, height / 2), *screen);
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::P)) mouseGrabbed = !mouseGrabbed;
-    float rYRadians = (PI / 180.0) * rY;
-    float rXRadians = (PI / 180.0) * (rX + 90);
-    float rXAdjustedRadians = (PI / 180.0) * (rX);
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
-        x -= (float) cos(rXAdjustedRadians) * MOVE_SPEED;
-        z -= (float) sin(rXAdjustedRadians) * MOVE_SPEED;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
-        x += (float) cos(rXAdjustedRadians) * MOVE_SPEED;
-        z += (float) sin(rXAdjustedRadians) * MOVE_SPEED;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
-        x += (float) cos(rXRadians) * MOVE_SPEED * fabs(cos(rYRadians));
-        y += (float) sin(rYRadians) * MOVE_SPEED;
-        z += (float) sin(rXRadians) * MOVE_SPEED * fabs(cos(rYRadians));
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
-        x -= (float) cos(rXRadians) * MOVE_SPEED * fabs(cos(rYRadians));
-        y -= (float) sin(rYRadians) * MOVE_SPEED;
-        z -= (float) sin(rXRadians) * MOVE_SPEED * fabs(cos(rYRadians));
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::U)) y+= MOVE_SPEED;
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::J)) y-= MOVE_SPEED;
-    if(rX > 360) rX -= 360;
-    if(rX < 0) rX += 360;
-    if(rY > 90) rY = 90;
-    if(rY < -90) rY = -90;
-
-    //std::cout << "{x,y,z} " << x << ", " << y << ", " << z << std::endl;
-}
-
-sf::Vector3f Camera::getCurrentPosition(){
-    return sf::Vector3f(x, y, z);
 }
 
 sf::Vector3f Camera::getLookingAt(){
@@ -76,6 +42,7 @@ sf::Vector3f Camera::getLookingAt(){
 }
 
 sf::Vector2i Camera::getRelativeMousePosition(){
+    if(!mouseGrabbed) return sf::Vector2i(0, 0);
     sf::Vector2i vec = sf::Mouse::getPosition(*screen);
     vec.y = (height / 2) - vec.y;
     vec.x = vec.x - (width / 2);

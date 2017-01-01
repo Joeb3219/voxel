@@ -1,6 +1,7 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
+#include <SFML/Window.hpp>
 #include "renderable.h"
 #define DEBUG 0
 
@@ -10,10 +11,11 @@ private:
     sf::Window *screen;
     float x, y, z;
     float rX, rY, rZ;
-    bool mouseGrabbed, focused;
+    bool mouseGrabbed;
     void gluPerspective(float fov, float aspectRatio, float near, float far);
 
 public:
+    bool focused;
     int width, height;
     Camera(int width, int height);
     bool handleEvents();
@@ -21,10 +23,10 @@ public:
     void postRender();
     void renderHUD();
     void windowResized(int width, int height);
-    void update();
+    void update(sf::Vector3f cameraPos, sf::Vector3f angle);
     sf::Vector2i getRelativeMousePosition();
     ~Camera();
-    sf::Vector3f getCurrentPosition();
+//    sf::Vector3f getCurrentPosition();
     sf::Vector3f getLookingAt();
 };
 

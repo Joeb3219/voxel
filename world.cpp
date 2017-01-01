@@ -7,6 +7,8 @@
 #include "lib/fastNoise/FastNoise.h"
 #include "renderable.h"
 
+#define PI 3.14159265
+
 namespace VOX_World{
 
     std::vector<Block> World::blocks;
@@ -153,6 +155,60 @@ namespace VOX_World{
         for(unsigned int i = 0; i < regions.size(); i ++){
             delete regions[i];
         }
+    }
+
+    sf::Vector3f Player::getPosition(){
+        return sf::Vector3f(x, y, z);
+    }
+
+    sf::Vector3f Player::getViewAngles(){
+        return sf::Vector3f(rX, rY, rZ);
+    }
+
+    void Player::setMouseChange(sf::Vector2i change){
+        rX += (change.x * 0.08);
+        rY -= (change.y * 0.08);
+    }
+
+    void Player::update(){
+        float rYRadians = (PI / 180.0) * rY;
+        float rXRadians = (PI / 180.0) * (rX + 90);
+        float rXAdjustedRadians = (PI / 180.0) * (rX);
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
+            x -= (float) cos(rXAdjustedRadians) * moveSpeed;
+            z -= (float) sin(rXAdjustedRadians) * moveSpeed;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
+            x += (float) cos(rXAdjustedRadians) * moveSpeed;
+            z += (float) sin(rXAdjustedRadians) * moveSpeed;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
+            x += (float) cos(rXRadians) * moveSpeed * fabs(cos(rYRadians));
+            y += (float) sin(rYRadians) * moveSpeed;
+            z += (float) sin(rXRadians) * moveSpeed * fabs(cos(rYRadians));
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
+            x -= (float) cos(rXRadians) * moveSpeed * fabs(cos(rYRadians));
+            y -= (float) sin(rYRadians) * moveSpeed;
+            z -= (float) sin(rXRadians) * moveSpeed * fabs(cos(rYRadians));
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::U)) y+= moveSpeed;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::J)) y-= moveSpeed;
+        if(rX > 360) rX -= 360;
+        if(rX < 0) rX += 360;
+        if(rY > 90) rY = 90;
+        if(rY < -90) rY = -90;
+    }
+
+    void Player::render(){
+
+    }
+
+    Player::Player(World *world, float x, float y, float z){
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->world = world;
     }
 
 }

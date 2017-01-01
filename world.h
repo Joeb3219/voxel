@@ -1,4 +1,5 @@
 #include <SFML/OpenGL.hpp>
+#include <SFML/Window.hpp>
 #include <string>
 #include <vector>
 #include "lib/fastNoise/FastNoise.h"
@@ -46,6 +47,29 @@ namespace VOX_World{
         static std::vector<Block> blocks;
         World(int seed = 0);
         ~World();
+        void update();
+        void render();
+    };
+
+    class Mob{
+    private:
+        float x, y, z;
+    public:
+        virtual sf::Vector3f getPosition() = 0;
+        virtual void update() = 0;
+        virtual void render() = 0;
+    };
+
+    class Player : public Mob{
+    private:
+        float x, y, z, rX, rY, rZ;
+        World *world;
+        float moveSpeed = 0.5f;
+    public:
+        Player(World *world, float x, float y, float z);
+        sf::Vector3f getPosition();
+        sf::Vector3f getViewAngles();
+        void setMouseChange(sf::Vector2i change);
         void update();
         void render();
     };
