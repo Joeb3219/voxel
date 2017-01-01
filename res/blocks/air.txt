@@ -1,0 +1,7 @@
+<block>
+    <data>
+        <name>Air</name>
+        <id>0:0</id>
+        <visible>false</visible>
+    </data>
+</block>

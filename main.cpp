@@ -17,7 +17,8 @@ long int getCurrentTime(){
 
 std::vector<VOX_World::Block> initBlocks(){
     std::vector<VOX_World::Block> blocks;
-    blocks.push_back(VOX_World::Block("res/blocks/base.txt"));
+    blocks.push_back(VOX_World::Block("res/blocks/air.txt"));
+    blocks.push_back(VOX_World::Block("res/blocks/grass.txt"));
     return blocks;
 }
 
@@ -29,29 +30,22 @@ int main(){
     long int timeSinceFPSCalculation = currentTime;
     int frames = 0;
 
-    std::vector<VOX_World::Block> blocks = initBlocks();
-
+    VOX_World::World::blocks = initBlocks();
+    VOX_World::World world(1337);
     VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
     bool running = true;
     while (running){
         running = camera->handleEvents();
         camera->preRender();
-        for(float x = -5; x <= 5; x ++){
-            for(float y = -5; y <= 5; y ++){
-                for(float z = -5; z <= 5; z ++){
-                    glBindTexture(GL_TEXTURE_2D, blocks.at(0).texture);
-                    cube.render(x*3, y*3, z*3);
-                }
-            }
-        }
+        world.render();
         frames ++;
         camera->postRender();
         while((currentTime + msPerTick) < getCurrentTime()){
             camera->update();
             currentTime += msPerTick;
-            //std::cout << "FPS: " << fps << std::endl;
+            std::cout << "FPS: " << fps << std::endl;
         }
-        if(frames > 400){
+        if(frames > 100){
             fps = (frames / ((getCurrentTime() - timeSinceFPSCalculation) / 1000.0));
             timeSinceFPSCalculation = currentTime;
             frames = 0;
