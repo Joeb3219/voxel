@@ -20,15 +20,15 @@ namespace VOX_World{
     public:
         Block(const char *str);
         Block();
-        int id, meta;
+        int id = -1, meta = 0;
         std::string name;
-        bool visible, solid;
-        GLuint texture;
+        bool visible = false, solid = false;
+        GLuint texture = 0;
     };
 
     class Region{
     private:
-        int DL_ID;
+        int DL_ID = 0;
         void buildDisplayList();
     public:
         bool needsUpdate;
@@ -58,7 +58,7 @@ namespace VOX_World{
 
     class Mob{
     private:
-        float x, y, z;
+        float x = 0, y = 0, z = 0;
     public:
         virtual sf::Vector3f getPosition() = 0;
         virtual void update() = 0;
@@ -67,10 +67,10 @@ namespace VOX_World{
 
     class Player : public Mob{
     private:
-        float x, y, z, rX, rY, rZ;
+        float x = 0, y = 0, z = 0, rX = 0, rY = 0, rZ = 0;
         float yVelocity = 0;
         int tickCounter = 0;
-        World *world;
+        World *world = 0;
         float moveSpeed = 0.05f;
     public:
         Player(World *world, float x, float y, float z);

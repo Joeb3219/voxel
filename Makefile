@@ -1,4 +1,4 @@
-CC := g++ -std=c++11
+CC := g++ -pg -std=c++11
 LIBS := -lsfml-graphics -lsfml-window -lsfml-system -lGL -lm -lglut -lGLU
 LIB_FATNOISE := lib/fastNoise/FastNoise.cpp
 LIB_ALL := $(LIB_FATNOISE)

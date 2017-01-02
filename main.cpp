@@ -78,6 +78,7 @@ int main(int argc, char **argv){
     }
 
     delete camera;
+    delete world;
 
     return 0;
 }

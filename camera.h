@@ -9,14 +9,14 @@ class Camera{
 
 private:
     sf::Window *screen;
-    float x, y, z;
-    float rX, rY, rZ;
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+    float rX = 0.0f, rY = 0.0f, rZ = 0.0f;
     bool mouseGrabbed;
     void gluPerspective(float fov, float aspectRatio, float near, float far);
 
 public:
-    bool focused;
-    int width, height;
+    bool focused = true;
+    int width = 0, height = 0;
     Camera(int width, int height);
     bool handleEvents();
     void preRender();
