@@ -16,11 +16,12 @@ long int getCurrentTime(){
     return currentTime;
 }
 
-std::vector<VOX_World::Block> initBlocks(){
-    std::vector<VOX_World::Block> blocks;
-    blocks.push_back(VOX_World::Block("res/blocks/air.txt"));
-    blocks.push_back(VOX_World::Block("res/blocks/grass.txt"));
-    blocks.push_back(VOX_World::Block("res/blocks/dirt.txt"));
+VOX_World::Block* initBlocks(){
+    int i = 0;
+    VOX_World::Block* blocks = new VOX_World::Block[256];
+    blocks[i++] = VOX_World::Block("res/blocks/air.txt");
+    blocks[i++] = VOX_World::Block("res/blocks/grass.txt");
+    blocks[i++] = VOX_World::Block("res/blocks/dirt.txt");
     return blocks;
 }
 
@@ -33,7 +34,7 @@ int main(int argc, char **argv){
     long int timeSinceFPSCalculation = currentTime;
     int frames = 0;
 
-    VOX_World::World::blocks = initBlocks();
+    VOX_World::blocks = initBlocks();
     VOX_World::World *world = new VOX_World::World(1337);
     VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
 
@@ -56,7 +57,7 @@ int main(int argc, char **argv){
                 + ", " + std::to_string(playerPos.y) + ", " + std::to_string(playerPos.z));
         sf::Vector3f lookingAt = player.getLookingAt();
         VOX_Graphics::renderString(8, camera->height - 39, std::string("Looking at: ") +
-                world->blocks.at(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).id).name + ": " + std::to_string(lookingAt.x)
+                VOX_World::blocks[world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false)].name + ": " + std::to_string(lookingAt.x)
                 + ", " + std::to_string(lookingAt.y) + ", " + std::to_string(lookingAt.z));
 
         // Cleanup

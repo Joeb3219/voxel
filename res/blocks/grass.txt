@@ -1,7 +1,7 @@
 <block>
     <data>
         <name>Grass</name>
-        <id>1:0</id>
+        <id>1</id>
         <texture>res/grass.bmp</texture>
         <visible>true</visible>
         <solid>true</solid>

@@ -26,6 +26,8 @@ namespace VOX_World{
         GLuint texture = 0;
     };
 
+    extern Block *blocks;
+
     class Region{
     private:
         int DL_ID = 0;
@@ -35,7 +37,7 @@ namespace VOX_World{
         int xOffset, zOffset;
         Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture);
         Biome biome;
-        Block blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
+        short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         void render();
         void update();
         bool isBlockVisible(int x, int y, int z);
@@ -45,12 +47,12 @@ namespace VOX_World{
     private:
         std::vector<Region*> regions;
     public:
-        static std::vector<Block> blocks;
         World(int seed = 0);
         ~World();
         Region* getRegion(float x, float y, float z);
-        Block getBlock(float x, float y, float z);
-        void setBlock(float x, float y, float z, Block block);
+        Block getBlock(short identifier);
+        short getBlock(float x, float y, float z, bool data = true);
+        void setBlock(float x, float y, float z, short blockData);
         sf::Vector3f getCollision(sf::Vector3f start, sf::Vector3f end);
         void update();
         void render();

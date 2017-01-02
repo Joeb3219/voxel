@@ -1,7 +1,7 @@
 <block>
     <data>
         <name>Dirt</name>
-        <id>2:0</id>
+        <id>2</id>
         <texture>res/dirt.bmp</texture>
         <visible>true</visible>
         <solid>true</solid>

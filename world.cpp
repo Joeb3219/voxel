@@ -11,7 +11,7 @@
 
 namespace VOX_World{
 
-    std::vector<Block> World::blocks;
+    Block *blocks;
 
     Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture){
         this->needsUpdate = true;
@@ -36,9 +36,9 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    if(y >= totalHeight) blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::AIR);
+                    if(y >= totalHeight) blocks[y][(x*REGION_SIZE + z)] = BlockIds::AIR;
                     else{
-                        blocks[y][(x*REGION_SIZE + z)] = World::blocks.at(BlockIds::GRASS);
+                        blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
                     }
                 }
             }
@@ -57,7 +57,7 @@ namespace VOX_World{
                     xPrime = x + xOffset;
                     yPrime = y;
                     zPrime = z + zOffset;
-                    Block block = blocks[y][(x*REGION_SIZE + z)];
+                    Block block = VOX_World::blocks[blocks[y][(x*REGION_SIZE + z)]];
                     if(!isBlockVisible(x, y, z)) continue;
                     glBindTexture(GL_TEXTURE_2D, block.texture);
                     VOX_Graphics::Cube::getInstance().render(xPrime, yPrime, zPrime);
@@ -70,14 +70,14 @@ namespace VOX_World{
     }
 
     bool Region::isBlockVisible(int x, int y, int z){
-        if(!blocks[y][(x * REGION_SIZE) + z].visible) return false;                         // Check if this is visible
+        if(!VOX_World::blocks[blocks[y][(x * REGION_SIZE) + z]].visible) return false;                         // Check if this is visible
         if(y == 0 || y == WORLD_HEIGHT || x == 0 || x == REGION_SIZE - 1 || z == 0 || z == REGION_SIZE - 1) return true;
-        if(!blocks[y + 1][(x * REGION_SIZE) + z].visible) return true;  // Check if above is visible
-        if(!blocks[y - 1][(x * REGION_SIZE) + z].visible) return true;             // Check if below is visible
-        if(!blocks[y][((x + 1) * REGION_SIZE) + z].visible) return true;// Check if right is visible
-        if(!blocks[y][((x - 1) * REGION_SIZE) + z].visible) return true;          // Check if left is visible
-        if(!blocks[y][((x) * REGION_SIZE) + z - 1].visible) return true;          // Check if behind is visible
-        if(!blocks[y][((x) * REGION_SIZE) + z + 1].visible) return true;// Check if forward is visible
+        if(!VOX_World::blocks[blocks[y + 1][(x * REGION_SIZE) + z]].visible) return true;  // Check if above is visible
+        if(!VOX_World::blocks[blocks[y - 1][(x * REGION_SIZE) + z]].visible) return true;             // Check if below is visible
+        if(!VOX_World::blocks[blocks[y][((x + 1) * REGION_SIZE) + z]].visible) return true;// Check if right is visible
+        if(!VOX_World::blocks[blocks[y][((x - 1) * REGION_SIZE) + z]].visible) return true;          // Check if left is visible
+        if(!VOX_World::blocks[blocks[y][((x) * REGION_SIZE) + z - 1]].visible) return true;          // Check if behind is visible
+        if(!VOX_World::blocks[blocks[y][((x) * REGION_SIZE) + z + 1]].visible) return true;// Check if forward is visible
         return false;
     }
 
@@ -87,7 +87,7 @@ namespace VOX_World{
             for(int y = 0; y < WORLD_HEIGHT; y ++){
                 for(int z = 0; z < REGION_SIZE; z ++){
                     ind = x*REGION_SIZE + z;
-                    if(blocks[y][ind].id == BlockIds::GRASS && blocks[y + 1][ind].visible == true) blocks[y][ind] = World::blocks.at(BlockIds::DIRT);
+                    if(blocks[y][ind] == BlockIds::GRASS && VOX_World::blocks[blocks[y + 1][ind]].visible == true) blocks[y][ind] = BlockIds::DIRT;
                 }
             }
         }
@@ -158,21 +158,26 @@ namespace VOX_World{
         return 0;
     }
 
-    Block World::getBlock(float x, float y, float z){
+    Block World::getBlock(short identifier){
+        return blocks[identifier & 0x00FF];
+    }
+
+    short World::getBlock(float x, float y, float z, bool data){
         int xPrime = (int) x;
         int yPrime = (int) y;
         int zPrime = (int) z;
-        if(yPrime >= WORLD_HEIGHT || yPrime < 0) return World::blocks.at(BlockIds::AIR);
+        if(yPrime >= WORLD_HEIGHT || yPrime < 0) return BlockIds::AIR;
         Region *r = getRegion(x, y, z);
         if(r != 0){
             xPrime -= (r->xOffset);
             zPrime -= (r->zOffset);
-            return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime];
+            if(data) return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime];
+            return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime] & 0x00FF;
         }
-        return World::blocks.at(BlockIds::AIR);
+        return BlockIds::AIR;
     }
 
-    void World::setBlock(float x, float y, float z, Block block){
+    void World::setBlock(float x, float y, float z, short blockData){
         int xPrime = (int) x;
         int yPrime = (int) y;
         int zPrime = (int) z;
@@ -181,7 +186,7 @@ namespace VOX_World{
         if(r != 0){
             xPrime -= (r->xOffset);
             zPrime -= (r->zOffset);
-            r->blocks[yPrime][xPrime * REGION_SIZE + zPrime] = block;
+            r->blocks[yPrime][xPrime * REGION_SIZE + zPrime] = blockData;
             r->needsUpdate = true;
         }
     }
@@ -191,7 +196,7 @@ namespace VOX_World{
         int steps = abs(end.y - start.y) * 8;
         for(int i = 0; i < steps; i ++){
             if(i != 0) start -= stepVector;
-            if(getBlock(start.x, start.y, start.z).solid == true) return start;
+            if(blocks[getBlock(start.x, start.y, start.z, false)].solid == true) return start;
         }
         return end;
     }
@@ -205,9 +210,9 @@ namespace VOX_World{
         moisture.SetSeed(seed * 2);
         moisture.SetFractalOctaves(8);
         regions.push_back(new Region(0, 0, &height, &moisture));
-        //regions.push_back(new Region(1, 0, &height, &moisture));
-        //regions.push_back(new Region(0, 1, &height, &moisture));
-        //regions.push_back(new Region(1, 1, &height, &moisture));
+        regions.push_back(new Region(1, 0, &height, &moisture));
+        regions.push_back(new Region(0, 1, &height, &moisture));
+        regions.push_back(new Region(1, 1, &height, &moisture));
     }
 
     World::~World(){
@@ -243,7 +248,7 @@ namespace VOX_World{
         // Now we hone into the vector to find a collision.
         for(int i = 0; i < steps; i ++){
             currentPos -= stepVector;
-            if(world->getBlock(currentPos.x, currentPos.y, currentPos.z).solid){
+            if(blocks[world->getBlock(currentPos.x, currentPos.y, currentPos.z, false)].solid){
                 if(!adjacent) return currentPos;
                 return (currentPos + stepVector);
             }
@@ -260,7 +265,7 @@ namespace VOX_World{
         if(newY < y){
             for(float j = y; j > newY; j -= 0.0125f){
                 y = j;
-                if(world->getBlock(x, j, z).solid == true){
+                if(blocks[world->getBlock(x, j, z, false)].solid == true){
                     if(fabs(j - ((int)j)) < 0.0125f){
                         yVelocity = 0;
                         y = (float) ( y);
@@ -271,7 +276,7 @@ namespace VOX_World{
         }else{
             for(float j = y; j < newY; j += 0.0125f){
                 y = j;
-                if(world->getBlock(x, j + 3, z).solid == true){
+                if(blocks[world->getBlock(x, j + 3, z, false)].solid == true){
                     yVelocity = 0;
                     y = (float) ((int) j + 3);
                     break;
@@ -286,7 +291,7 @@ namespace VOX_World{
         stepVector = (curr - goal) * (1.0f / numSteps);
         for(int i = 0; i < numSteps; i ++){
             curr -= stepVector;
-            if(world->getBlock(curr.x, curr.y + 1, curr.z).solid == true){
+            if(blocks[world->getBlock(curr.x, curr.y + 1, curr.z, false)].solid == true){
                 curr += stepVector;
                 break;
             }
@@ -297,13 +302,13 @@ namespace VOX_World{
         sf::Vector3f lookingAt = getLookingAt();
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 15){
             tickCounter = 0;
-            world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::AIR));
+            world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, BlockIds::AIR);
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 15){
-            if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).id != World::blocks.at(BlockIds::AIR).id){
+            if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false) != BlockIds::AIR){
                 tickCounter = 0;
                 lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
-                world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::DIRT));
+                world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, BlockIds::DIRT);
             }
         }
 
