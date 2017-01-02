@@ -49,19 +49,21 @@ namespace VOX_World{
     void Region::buildDisplayList(){
         DL_ID = glGenLists(1);
         glNewList(DL_ID, GL_COMPILE);
-
-        for(int x = 0; x < REGION_SIZE; x ++){
-            for(int z = 0; z < REGION_SIZE; z ++){
-                for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    float xPrime, yPrime, zPrime;
-                    xPrime = x + xOffset;
-                    yPrime = y;
-                    zPrime = z + zOffset;
-                    Block block = VOX_World::blocks[blocks[y][(x*REGION_SIZE + z)]];
-                    if(!isBlockVisible(x, y, z)) continue;
-                    glBindTexture(GL_TEXTURE_2D, block.texture);
-                    VOX_Graphics::Cube::getInstance().render(xPrime, yPrime, zPrime);
-                    glBindTexture(GL_TEXTURE_2D, 0);
+        float xPrime, yPrime, zPrime;
+        for(int i = 0; i < 256; i ++){
+            if(blocks[i] == 0) break;   // A null pointer
+            glBindTexture(GL_TEXTURE_2D, VOX_World::blocks[i].texture);
+            for(int x = 0; x < REGION_SIZE; x ++){
+                for(int z = 0; z < REGION_SIZE; z ++){
+                    for(int y = 0; y < WORLD_HEIGHT; y ++){
+                        xPrime = x + xOffset;
+                        yPrime = y;
+                        zPrime = z + zOffset;
+                        short id = blocks[y][(x*REGION_SIZE + z)];
+                        if(id != i) continue;
+                        if(!isBlockVisible(x, y, z)) continue;
+                        VOX_Graphics::Cube::getInstance().render(xPrime, yPrime, zPrime);
+                    }
                 }
             }
         }
@@ -300,11 +302,11 @@ namespace VOX_World{
         z = curr.z;
 
         sf::Vector3f lookingAt = getLookingAt();
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 15){
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 35){
             tickCounter = 0;
             world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, BlockIds::AIR);
         }
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 15){
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
             if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false) != BlockIds::AIR){
                 tickCounter = 0;
                 lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
