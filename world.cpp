@@ -253,7 +253,6 @@ namespace VOX_World{
 
     void Player::update(){
         tickCounter ++;
-        std::cout << "[x,y,z,yVel]: " << x << "," << y << "," << z << "," << yVelocity << std::endl;
 
         // Jumping / falling code.
         float newY = y;

@@ -3,6 +3,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 #include <sys/time.h>
+#include <GL/glut.h>
 #include "main.h"
 #include "camera.h"
 #include "renderable.h"
@@ -23,7 +24,8 @@ std::vector<VOX_World::Block> initBlocks(){
     return blocks;
 }
 
-int main(){
+int main(int argc, char **argv){
+    glutInit(&argc, argv);
     Camera *camera = new Camera(800, 600);
 
     double msPerTick = 1000.0 / Settings::tickRate, fps = 0;
@@ -47,7 +49,15 @@ int main(){
 
         // Text & HUD rendering
         camera->pre2DRender();
-        VOX_Graphics::Text::getInstance().renderString(std::string("Hello World"), 10.f, 90.f);
+
+        VOX_Graphics::renderString(8, camera->height - 13, std::string("FPS: ") + std::to_string(fps));
+        sf::Vector3f playerPos = player.getPosition();
+        VOX_Graphics::renderString(8, camera->height - 26, std::string("[x,y,z]: ") + std::to_string(playerPos.x)
+                + ", " + std::to_string(playerPos.y) + ", " + std::to_string(playerPos.z));
+        sf::Vector3f lookingAt = player.getLookingAt();
+        VOX_Graphics::renderString(8, camera->height - 39, std::string("Looking at: ") +
+                world->blocks.at(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).id).name + ": " + std::to_string(lookingAt.x)
+                + ", " + std::to_string(lookingAt.y) + ", " + std::to_string(lookingAt.z));
 
         // Cleanup
         camera->postRender();
@@ -59,7 +69,6 @@ int main(){
             camera->update(player.getPosition(), player.getViewAngles());
             currentTime += msPerTick;
             world->update();
-            //std::cout << "FPS: " << fps << std::endl;
         }
         if(frames > 100){
             fps = (frames / ((getCurrentTime() - timeSinceFPSCalculation) / 1000.0));

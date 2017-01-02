@@ -6,8 +6,6 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 
-#define NUM_SYMBOLS 58
-
 namespace VOX_Graphics{
 
     class Renderable{
@@ -25,16 +23,7 @@ namespace VOX_Graphics{
         void render(float x, float y, float z);
     };
 
-    class Text{
-    private:
-        static GLuint letterDisplayLists;
-        GLuint fullTextmap;
-        void renderLetter(char c, float x, float y, float size = 1.0f);
-        Text();
-    public:
-        void renderString(std::string str, float x, float y, float size = 1.0f);
-        static Text &getInstance();
-    };
+    void renderString(int x, int y, std::string str);
 
 }
 

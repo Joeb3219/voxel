@@ -2,6 +2,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 #include <cmath>
+#include <GL/glut.h>
 #include "camera.h"
 #include "renderable.h"
 
@@ -79,6 +80,7 @@ bool Camera::handleEvents(){
 }
 
 void Camera::preRender(){
+    glEnable(GL_TEXTURE_2D);
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.2f, 0.3f, 1.f, 1.f);
@@ -93,12 +95,23 @@ void Camera::preRender(){
 }
 
 void Camera::pre2DRender(){
-    glViewport(0, 0, width, height);
-    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
+    glMatrixMode( GL_PROJECTION );
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D( 0, width, 0, height );
+
+    glMatrixMode( GL_MODELVIEW );
+    glPushMatrix();
+    glLoadIdentity();
 }
 
 void Camera::postRender(){
-        screen->display();
+    glPopMatrix();
+    glMatrixMode( GL_PROJECTION );
+    glPopMatrix();
+    glMatrixMode( GL_MODELVIEW );
+    screen->display();
 }
 
 Camera::~Camera(){
