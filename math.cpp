@@ -2,7 +2,7 @@
 #include <SFML/Window.hpp>
 #include <cmath>
 
-#define GRAVITY_PER_TICK -0.5f/30
+#define GRAVITY_PER_TICK -0.25f/30
 
 namespace VOX_Math{
 
@@ -24,7 +24,6 @@ namespace VOX_Math{
     }
 
     void calculateFalling(float *yPosition, float *yVelocity, int ticksPassed){
-        std::cout << "yPosition is currently " << (*yPosition) << ", yVel: " << (*yVelocity) << std::endl;
         (*yPosition) += (*yVelocity) * ticksPassed;
         (*yVelocity) += GRAVITY_PER_TICK * ticksPassed;
     }

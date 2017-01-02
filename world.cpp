@@ -96,7 +96,9 @@ namespace VOX_World{
     }
 
     void Region::render(){
+        glPushMatrix();
         if(DL_ID != 0) glCallList(DL_ID);
+        glPopMatrix();
     }
 
     Block::Block(){
@@ -144,10 +146,12 @@ namespace VOX_World{
     }
 
     Region* World::getRegion(float x, float y, float z){
-        int xPrime = (int) x;
-        int zPrime = (int) z;
-        int xRegion = ((xPrime + REGION_SIZE - 1) / REGION_SIZE * REGION_SIZE) - REGION_SIZE;
-        int zRegion = ((zPrime + REGION_SIZE - 1) / REGION_SIZE * REGION_SIZE) - REGION_SIZE;
+        int xPrime = abs(x);
+        int zPrime = abs(z);
+        int xRegion = (((xPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
+        int zRegion = (((zPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
+        if(x < 0) xRegion = -xRegion - REGION_SIZE;
+        if(z < 0) zRegion = -zRegion - REGION_SIZE;
         for(unsigned int i = 0; i < regions.size(); i ++){
             if(regions[i]->xOffset == xRegion && regions[i]->zOffset == zRegion) return regions[i];
         }
@@ -286,7 +290,7 @@ namespace VOX_World{
                 world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::DIRT));
             }
         }
-        std::cout << "Currently looking at block " << world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).name << std::endl;
+        //std::cout << "Currently looking at block " << world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).name << std::endl;
         float rYRadians = (PI / 180.0) * rY;
         float rXRadians = (PI / 180.0) * (rX + 90);
         float rXAdjustedRadians = (PI / 180.0) * (rX);
@@ -299,14 +303,12 @@ namespace VOX_World{
             z += (float) sin(rXAdjustedRadians) * moveSpeed;
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
-            x += (float) cos(rXRadians) * moveSpeed * fabs(cos(rYRadians));
-            //y += (float) sin(rYRadians) * moveSpeed;
-            z += (float) sin(rXRadians) * moveSpeed * fabs(cos(rYRadians));
+            x += (float) cos(rXRadians) * moveSpeed;
+            z += (float) sin(rXRadians) * moveSpeed;
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
-            x -= (float) cos(rXRadians) * moveSpeed * fabs(cos(rYRadians));
-            //y -= (float) sin(rYRadians) * moveSpeed;
-            z -= (float) sin(rXRadians) * moveSpeed * fabs(cos(rYRadians));
+            x -= (float) cos(rXRadians) * moveSpeed;
+            z -= (float) sin(rXRadians) * moveSpeed;
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
             if(yVelocity == 0.0f) yVelocity = 0.25f;

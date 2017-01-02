@@ -51,7 +51,7 @@ int main(){
             camera->update(player.getPosition(), player.getViewAngles());
             currentTime += msPerTick;
             world->update();
-            std::cout << "FPS: " << fps << std::endl;
+            //std::cout << "FPS: " << fps << std::endl;
         }
         if(frames > 100){
             fps = (frames / ((getCurrentTime() - timeSinceFPSCalculation) / 1000.0));

@@ -94,7 +94,7 @@ void Camera::preRender(){
 	glRotatef(rY, 1, 0, 0);
 	glRotatef(rX, 0, 1, 0);
 	glRotatef(rZ, 0, 0, 1);
-	glTranslatef(-x, -(y + 2), -z);
+	glTranslatef(-(x), -(y + 2), -(z));
     glMatrixMode(GL_MODELVIEW);
 }
 
