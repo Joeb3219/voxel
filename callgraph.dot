@@ -1,0 +1,26 @@
+digraph "callgraph" {
+  F1d428d8 [label="0x0000000000000cc0\n1 959 386 044"];
+  F1d43b98 [label="_start\n1 959 386 044"];
+  F1dbab18 [label="_dl_runtime_resolve_avx <cycle...\n1 959 412 601"];
+  F1dbb308 [label="(below main)\n1 959 383 958"];
+  F200ad48 [label="VOX_World::World::render()\n3 193 376 316"];
+  F200b578 [label="VOX_World::Region::render()\n3 193 365 841"];
+  F201b468 [label="main\n1 959 231 135"];
+  F23b6f78 [label="0x000000000038d790\n656 979 306"];
+  F250a9b8 [label="0x00000000003741a0 <cycle 1>\n723 403 339"];
+  F250f3e8 [label="0x00000000001ad310 <cycle 1>\n237 698 015"];
+  F2599488 [label="0x0000000000138ca0 <cycle 1>\n197 794 348"];
+  F28e14c0 [label="<cycle 1>\n3 789 252 160"];
+  F1d428d8 -> F1d43b98 [weight=3,label="1 959 386 044 (1x)"];
+  F1d43b98 -> F28e14c0 [weight=3,label="1 959 386 044 (1x)"];
+  F1dbab18 -> F1dbb308 [weight=3,label="1 959 383 958 (1x)"];
+  F1dbb308 -> F201b468 [weight=3,label="1 959 231 135 (1x)"];
+  F200ad48 -> F200b578 [weight=3,label="3 193 365 841 (56x)"];
+  F200b578 -> F28e14c0 [weight=3,label="3 193 362 792 (52x)"];
+  F201b468 -> F200ad48 [weight=3,label="1 596 696 496 (7x)"];
+  F250a9b8 -> F23b6f78 [weight=3,label="656 979 306 (112 153x)"];
+  F28e14c0 -> F1dbab18 [weight=3,label="1 959 412 601 (0x)"];
+  F28e14c0 -> F250a9b8 [weight=3,label="723 403 339 (0x)"];
+  F28e14c0 -> F250f3e8 [weight=2,label="237 698 015 (0x)"];
+  F28e14c0 -> F2599488 [weight=2,label="197 794 348 (0x)"];
+}

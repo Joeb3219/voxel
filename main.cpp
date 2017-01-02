@@ -36,7 +36,6 @@ int main(int argc, char **argv){
 
     VOX_World::blocks = initBlocks();
     VOX_World::World *world = new VOX_World::World(1337);
-    VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
 
     VOX_World::Player player(world, 8.f, 90.f, 8.f);
 
