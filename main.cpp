@@ -41,9 +41,17 @@ int main(){
     while (running){
         running = camera->handleEvents();
         camera->preRender();
+
+        // Strictly 3D space rendering
         world->render();
-        frames ++;
+
+        // Text & HUD rendering
+        camera->pre2DRender();
+        VOX_Graphics::Text::getInstance().renderString(std::string("Hello World"), 10.f, 90.f);
+
+        // Cleanup
         camera->postRender();
+        frames ++;
         while((currentTime + msPerTick) < getCurrentTime()){
             if(!camera->focused) continue;
             player.setMouseChange(camera->getRelativeMousePosition());

@@ -78,14 +78,8 @@ bool Camera::handleEvents(){
     return true;
 }
 
-void Camera::renderHUD(){
-    glPushMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glOrtho(0, 128, 0, 128, 0, 1);
-    glPopMatrix();
-}
-
 void Camera::preRender(){
+    glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.2f, 0.3f, 1.f, 1.f);
     glLoadIdentity();
@@ -94,8 +88,13 @@ void Camera::preRender(){
 	glRotatef(rY, 1, 0, 0);
 	glRotatef(rX, 0, 1, 0);
 	glRotatef(rZ, 0, 0, 1);
-	glTranslatef(-(x), -(y + 2), -(z));
-    glMatrixMode(GL_MODELVIEW);
+	glTranslatef(-(x), -(y + 3), -(z));
+    glEnable(GL_DEPTH_TEST);
+}
+
+void Camera::pre2DRender(){
+    glViewport(0, 0, width, height);
+    glDisable(GL_DEPTH_TEST);
 }
 
 void Camera::postRender(){

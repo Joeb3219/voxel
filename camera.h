@@ -21,7 +21,7 @@ public:
     bool handleEvents();
     void preRender();
     void postRender();
-    void renderHUD();
+    void pre2DRender();
     void windowResized(int width, int height);
     void update(sf::Vector3f cameraPos, sf::Vector3f angle);
     sf::Vector2i getRelativeMousePosition();

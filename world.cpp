@@ -232,12 +232,12 @@ namespace VOX_World{
     sf::Vector3f Player::getLookingAt(bool adjacent){
         int steps = 32; // Moves roughly 1/4 of a block at a time.
         sf::Vector3f currentPos = getPosition();
-        currentPos.y += 2;
+        currentPos.y += 3;
         sf::Vector3f lookingAt;
         float rYRadians = (PI / 180.0) * rY;
         float rXRadians = (PI / 180.0) * (rX + 90);
         lookingAt.x = x - ((float) cos(rXRadians) * 8.f * fabs(cos(rYRadians)));
-        lookingAt.y = (y + 2) - ((float) sin(rYRadians) * 8.f);
+        lookingAt.y = (y + 3) - ((float) sin(rYRadians) * 8.f);
         lookingAt.z = z - ((float) sin(rXRadians) * 8.f * fabs(cos(rYRadians)));
         sf::Vector3f stepVector = (currentPos - lookingAt) * (1.0f / steps);
         // Now we hone into the vector to find a collision.
@@ -270,9 +270,9 @@ namespace VOX_World{
         }else{
             for(float j = y; j < newY; j += 0.0125f){
                 y = j;
-                if(world->getBlock(x, j + 2, z).solid == true){
+                if(world->getBlock(x, j + 3, z).solid == true){
                     yVelocity = 0;
-                    y = (float) ((int) j + 2);
+                    y = (float) ((int) j + 3);
                     break;
                 }
             }
@@ -291,7 +291,6 @@ namespace VOX_World{
             }
         }
         //std::cout << "Currently looking at block " << world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).name << std::endl;
-        float rYRadians = (PI / 180.0) * rY;
         float rXRadians = (PI / 180.0) * (rX + 90);
         float rXAdjustedRadians = (PI / 180.0) * (rX);
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)){

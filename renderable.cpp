@@ -4,10 +4,13 @@
 #include <SFML/Graphics.hpp>
 #include <ctime>
 #include "lib/fastNoise/FastNoise.h"
+#include "fileIO.h"
 #include "renderable.h"
 #include "math.h"
 
 namespace VOX_Graphics{
+
+    GLuint Text::letterDisplayLists;
 
     Cube::Cube(){
         float leftBound = 0.0f, rightBound = 1.0f;
@@ -70,6 +73,58 @@ namespace VOX_Graphics{
         glColor3f(.2f, .4f, .3f);
         glCallList(DL_ID);
         glPopMatrix();
+    }
+
+    Text::Text(){
+        fullTextmap = VOX_FileIO::loadBitmapTexture("res/text.bmp");
+        letterDisplayLists = glGenLists(NUM_SYMBOLS);
+        int numPerRow = 32, row = 0, col = 0;
+        GLuint dl_id;
+        for(int i = 0; i < NUM_SYMBOLS; i ++){
+            if(row == numPerRow){
+                col ++;
+                row = 0;
+            }else row ++;
+
+            dl_id = letterDisplayLists + i;
+            glNewList(dl_id, GL_COMPILE);
+                glBindTexture(GL_TEXTURE_2D, fullTextmap);
+                glBegin(GL_QUADS);
+                    glTexCoord2f(1.0f / row, 1.0f / (col + 1)); glVertex2f(0.f, 0.f);
+                    glTexCoord2f(1.0f / (row + 1), 1.0f / (col + 1)); glVertex2f(1.f, 0.f);
+                    glTexCoord2f(1.0f / (row + 1), 1.0f / (col)); glVertex2f(1.f, 1.f);
+                    glTexCoord2f(1.0f / (row), 1.0f / (col)); glVertex2f(0.f, 1.f);
+                glEnd();
+                glBindTexture(GL_TEXTURE_2D, 0);
+            glEndList();
+        }
+    }
+
+    void Text::renderLetter(char c, float x, float y, float size){
+        //glTranslatef(x, y, 1.f);
+        //glCallList(letterDisplayLists + (c - 0x20));
+        int row = (c - 0x20) / 32;
+        int col = (c - 0x20) % 32;
+            glBindTexture(GL_TEXTURE_2D, fullTextmap);
+            glBegin(GL_QUADS);
+                glTexCoord2f(1.0f / row, 1.0f / (col + 1)); glVertex3f(x + 0.f, y + 0.f, 0.f);
+                glTexCoord2f(1.0f / (row + 1), 1.0f / (col + 1)); glVertex3f(x + 1.f, y + 0.f, 0.f);
+                glTexCoord2f(1.0f / (row + 1), 1.0f / (col)); glVertex3f(x + 1.f, y + 1.f, 0.f);
+                glTexCoord2f(1.0f / (row), 1.0f / (col)); glVertex3f(x + 0.f, y + 1.f, 0.f);
+            glEnd();
+            glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    void Text::renderString(std::string str, float x, float y, float size){
+        glColor3f(1.0f, 1.0f, 1.0f);
+        for(unsigned int i = 0; i < str.size(); i ++){
+            renderLetter(str.at(i), x + (i * size), y);
+        }
+    }
+
+    Text &Text::getInstance(){
+        static Text text;
+        return text;
     }
 
 }
