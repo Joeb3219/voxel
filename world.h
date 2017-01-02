@@ -23,7 +23,7 @@ namespace VOX_World{
         int id = -1, meta = 0;
         std::string name;
         bool visible = false, solid = false;
-        GLuint texture = 0;
+        float texCoords[12] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
     };
 
     extern Block *blocks;

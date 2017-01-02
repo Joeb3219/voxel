@@ -7,6 +7,7 @@
 #include "main.h"
 #include "camera.h"
 #include "renderable.h"
+#include "fileIO.h"
 #include "world.h"
 
 long int getCurrentTime(){
@@ -17,6 +18,7 @@ long int getCurrentTime(){
 }
 
 VOX_World::Block* initBlocks(){
+    VOX_Graphics::textureAtlas = VOX_FileIO::loadBitmapTexture("res/textures.bmp");
     int i = 0;
     VOX_World::Block* blocks = new VOX_World::Block[256];
     blocks[i++] = VOX_World::Block("res/blocks/air.txt");

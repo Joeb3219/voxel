@@ -2,7 +2,7 @@
     <data>
         <name>Dirt</name>
         <id>2</id>
-        <texture>res/dirt.bmp</texture>
+        <texture>0:2,0:2,0:2,0:2,0:2,0:2</texture>
         <visible>true</visible>
         <solid>true</solid>
     </data>

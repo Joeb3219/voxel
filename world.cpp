@@ -49,10 +49,10 @@ namespace VOX_World{
     void Region::buildDisplayList(){
         DL_ID = glGenLists(1);
         glNewList(DL_ID, GL_COMPILE);
+        glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
         float xPrime, yPrime, zPrime;
         for(int i = 0; i < 256; i ++){
             if(blocks[i] == 0) break;   // A null pointer
-            glBindTexture(GL_TEXTURE_2D, VOX_World::blocks[i].texture);
             for(int x = 0; x < REGION_SIZE; x ++){
                 for(int z = 0; z < REGION_SIZE; z ++){
                     for(int y = 0; y < WORLD_HEIGHT; y ++){
@@ -62,7 +62,7 @@ namespace VOX_World{
                         short id = blocks[y][(x*REGION_SIZE + z)];
                         if(id != i) continue;
                         if(!isBlockVisible(x, y, z)) continue;
-                        VOX_Graphics::Cube::getInstance().render(xPrime, yPrime, zPrime);
+                        VOX_Graphics::Cube::getInstance().render(xPrime, yPrime, zPrime, &VOX_World::blocks[id].texCoords[0]);
                     }
                 }
             }
@@ -114,21 +114,38 @@ namespace VOX_World{
             return;
         }
         VOX_FileIO::Tree data(file);
-        std::string string_id, string_name, string_texture, string_visible, string_solid;
+        std::string string_id, string_name, string_visible, string_solid;
+        std::string string_texture;
         string_id = data.search("block:data:id");
         string_name = data.search("block:data:name");
-        string_texture = data.search("block:data:texture");
         string_visible = data.search("block:data:visible");
         string_solid = data.search("block:data:solid");
+        string_texture = data.search("block:data:texture");
 
         if(!string_id.empty()) id = atoi(string_id.c_str());
         if(!string_name.empty()) name = string_name;
-        if(!string_texture.empty()) texture = VOX_FileIO::loadBitmapTexture(string_texture.c_str());
-        else texture = 0;
         if(!string_visible.empty() && std::string("true").compare(string_visible) == 0) visible = true;
         else visible = false;
         if(!string_solid.empty() && std::string("true").compare(string_solid) == 0) solid = true;
         else solid = false;
+
+        if(!string_texture.empty()){
+            std::string currNum("");
+            char c;
+            int j = 0;
+            for(unsigned int i = 0; i < string_texture.size(); i ++){
+                c = string_texture.at(i);
+                if(c == ':' || c == ','){
+                    texCoords[j++] = atoi(currNum.c_str());
+                    currNum = std::string("");
+                }else currNum += c;
+            }
+            texCoords[j++] = atoi(currNum.c_str());
+            for(int i = 0; i < 12; i ++){
+                if(i % 2 == 1) texCoords[i] = (1.0f / 32.0f) * texCoords[i];
+                else texCoords[i] = 1.0f - ((1.0f / 32.0f) * (texCoords[i] + 1));
+            }
+        }
     }
 
     Biome getBiome(double elevation, double moisture){
@@ -261,8 +278,24 @@ namespace VOX_World{
     void Player::update(){
         tickCounter ++;
 
-        // Jumping / falling code.
         float newY = y, newX = x, newZ = z;
+
+        checkMovement(&newX, &newZ);
+
+        int numSteps = 4;
+        sf::Vector3f curr = sf::Vector3f(x, y, z), goal(newX, y, newZ), stepVector;
+        stepVector = (curr - goal) * (1.0f / numSteps);
+        for(int i = 0; i < numSteps; i ++){
+            curr -= stepVector;
+            if(blocks[world->getBlock(curr.x, curr.y + 1, curr.z, false)].solid == true){
+                curr += stepVector;
+                break;
+            }
+        }
+        x = curr.x;
+        z = curr.z;
+
+        // Jumping / falling code.
         VOX_Math::calculateFalling(&newY, &yVelocity, 1);
         if(newY < y){
             for(float j = y; j > newY; j -= 0.0125f){
@@ -285,21 +318,6 @@ namespace VOX_World{
                 }
             }
         }
-
-        checkMovement(&newX, &newZ);
-
-        int numSteps = 4;
-        sf::Vector3f curr = sf::Vector3f(x, y, z), goal(newX, y, newZ), stepVector;
-        stepVector = (curr - goal) * (1.0f / numSteps);
-        for(int i = 0; i < numSteps; i ++){
-            curr -= stepVector;
-            if(blocks[world->getBlock(curr.x, curr.y + 1, curr.z, false)].solid == true){
-                curr += stepVector;
-                break;
-            }
-        }
-        x = curr.x;
-        z = curr.z;
 
         sf::Vector3f lookingAt = getLookingAt();
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 35){

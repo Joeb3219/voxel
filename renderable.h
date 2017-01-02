@@ -8,6 +8,8 @@
 
 namespace VOX_Graphics{
 
+    extern GLuint textureAtlas;
+
     class Renderable{
     public:
         virtual void render(float x, float y, float z) = 0;
@@ -19,7 +21,7 @@ namespace VOX_Graphics{
         Cube();
     public:
         static Cube &getInstance();
-        void render(float x, float y, float z);
+        void render(float x, float y, float z, float *texCoords);
     };
 
     void renderString(int x, int y, std::string str);
