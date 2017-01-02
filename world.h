@@ -72,6 +72,7 @@ namespace VOX_World{
         int tickCounter = 0;
         World *world = 0;
         float moveSpeed = 0.05f;
+        void checkMovement(float *x, float *z);
     public:
         Player(World *world, float x, float y, float z);
         sf::Vector3f getPosition();

@@ -255,15 +255,17 @@ namespace VOX_World{
         tickCounter ++;
 
         // Jumping / falling code.
-        float newY = y;
+        float newY = y, newX = x, newZ = z;
         VOX_Math::calculateFalling(&newY, &yVelocity, 1);
         if(newY < y){
             for(float j = y; j > newY; j -= 0.0125f){
                 y = j;
                 if(world->getBlock(x, j, z).solid == true){
-                    yVelocity = 0;
-                    y = (float) ((int) y);
-                    break;
+                    if(fabs(j - ((int)j)) < 0.0125f){
+                        yVelocity = 0;
+                        y = (float) ( y);
+                        break;
+                    }
                 }
             }
         }else{
@@ -277,6 +279,21 @@ namespace VOX_World{
             }
         }
 
+        checkMovement(&newX, &newZ);
+
+        int numSteps = 4;
+        sf::Vector3f curr = sf::Vector3f(x, y, z), goal(newX, y, newZ), stepVector;
+        stepVector = (curr - goal) * (1.0f / numSteps);
+        for(int i = 0; i < numSteps; i ++){
+            curr -= stepVector;
+            if(world->getBlock(curr.x, curr.y + 1, curr.z).solid == true){
+                curr += stepVector;
+                break;
+            }
+        }
+        x = curr.x;
+        z = curr.z;
+
         sf::Vector3f lookingAt = getLookingAt();
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 15){
             tickCounter = 0;
@@ -289,32 +306,35 @@ namespace VOX_World{
                 world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, world->blocks.at(BlockIds::DIRT));
             }
         }
-        //std::cout << "Currently looking at block " << world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z).name << std::endl;
-        float rXRadians = (PI / 180.0) * (rX + 90);
-        float rXAdjustedRadians = (PI / 180.0) * (rX);
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
-            x -= (float) cos(rXAdjustedRadians) * moveSpeed;
-            z -= (float) sin(rXAdjustedRadians) * moveSpeed;
-        }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
-            x += (float) cos(rXAdjustedRadians) * moveSpeed;
-            z += (float) sin(rXAdjustedRadians) * moveSpeed;
-        }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
-            x += (float) cos(rXRadians) * moveSpeed;
-            z += (float) sin(rXRadians) * moveSpeed;
-        }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
-            x -= (float) cos(rXRadians) * moveSpeed;
-            z -= (float) sin(rXRadians) * moveSpeed;
-        }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
-            if(yVelocity == 0.0f) yVelocity = 0.25f;
-        }
+
         if(rX > 360) rX -= 360;
         if(rX < 0) rX += 360;
         if(rY > 90) rY = 90;
         if(rY < -90) rY = -90;
+    }
+
+    void Player::checkMovement(float *x, float *z){
+        float rXRadians = (PI / 180.0) * (rX + 90);
+        float rXAdjustedRadians = (PI / 180.0) * (rX);
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
+            (*x) -= (float) cos(rXAdjustedRadians) * moveSpeed;
+            (*z) -= (float) sin(rXAdjustedRadians) * moveSpeed;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
+            (*x) += (float) cos(rXAdjustedRadians) * moveSpeed;
+            (*z) += (float) sin(rXAdjustedRadians) * moveSpeed;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
+            (*x) += (float) cos(rXRadians) * moveSpeed;
+            (*z) += (float) sin(rXRadians) * moveSpeed;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
+            (*x) -= (float) cos(rXRadians) * moveSpeed;
+            (*z) -= (float) sin(rXRadians) * moveSpeed;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+            if(yVelocity == 0.0f) yVelocity = 0.10f;
+        }
     }
 
     void Player::render(){
