@@ -95,6 +95,7 @@ void Camera::preRender(){
 
 void Camera::pre2DRender(){
     glDisable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
     glMatrixMode( GL_PROJECTION );
     glPushMatrix();
     glLoadIdentity();

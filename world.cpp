@@ -6,6 +6,7 @@
 #include "fileIO.h"
 #include "lib/fastNoise/FastNoise.h"
 #include "renderable.h"
+#include "inventory.h"
 
 #define PI 3.14159265
 
@@ -37,51 +38,51 @@ namespace VOX_World{
                 int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     float currentDensity = VOX_Math::convertScale(density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
-                    if(y >= totalHeight || currentDensity <= 0){
-                        blocks[y][(x*REGION_SIZE + z)] = BlockIds::AIR;
+                    if(y >= totalHeight || currentDensity <= 0.04f){
+                        blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::AIR;
                         continue;
                     }
                     if(y >= TYPICAL_GROUND){
-                        if(currentDensity <= 0.75f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
-                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                        if(currentDensity <= 0.75f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRASS;
+                        else blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::STONE;
                     }else if(y >= 58){
-                        if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
-                        else if(currentDensity <= 0.55f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
-                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                        if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRASS;
+                        else if(currentDensity <= 0.55f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRAVEL;
+                        else blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::STONE;
                     }else if(y >= 50){
-                        if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
-                        else if(currentDensity <= 0.30f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
-                        else if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
-                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                        if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::DIRT;
+                        else if(currentDensity <= 0.30f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::COAL;
+                        else blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::STONE;
                     }else if(y >= 40){
-                        if(currentDensity <= 0.09f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
-                        else if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
-                        else if(currentDensity <= 0.30f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
-                        else if(currentDensity <= 0.41f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
-                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                        if(currentDensity <= 0.09f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::DIRT;
+                        else if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.30f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::COAL;
+                        else if(currentDensity <= 0.41f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::IRON;
+                        else blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::STONE;
                     }else if(y >= 30){
-                        if(currentDensity <= 0.10f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
-                        else if(currentDensity <= 0.20f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
-                        else if(currentDensity <= 0.32f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
-                        else if(currentDensity <= 0.46f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
-                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                        if(currentDensity <= 0.10f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::DIRT;
+                        else if(currentDensity <= 0.20f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.32f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::COAL;
+                        else if(currentDensity <= 0.46f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::IRON;
+                        else blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::STONE;
                     }else if(y >= 16){
-                        if(currentDensity <= 0.12f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
-                        else if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
-                        else if(currentDensity <= 0.29f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
-                        else if(currentDensity <= 0.34f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GOLD;
-                        else if(currentDensity <= 0.40f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::REDSTONE;
-                        else if(currentDensity <= 0.47f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
-                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                        if(currentDensity <= 0.12f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::DIRT;
+                        else if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.29f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::COAL;
+                        else if(currentDensity <= 0.34f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GOLD;
+                        else if(currentDensity <= 0.40f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::REDSTONE;
+                        else if(currentDensity <= 0.47f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::IRON;
+                        else blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::STONE;
                     }else{
-                        if(currentDensity <= 0.05) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
-                        else if(currentDensity <= 0.12f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
-                        else if(currentDensity <= 0.16f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIAMOND;
-                        else if(currentDensity <= 0.22f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GOLD;
-                        else if(currentDensity <= 0.24f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::REDSTONE;
-                        else if(currentDensity <= 0.35f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
-                        else if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
-                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                        if(currentDensity <= 0.05) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::DIRT;
+                        else if(currentDensity <= 0.12f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.16f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::DIAMOND;
+                        else if(currentDensity <= 0.22f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::GOLD;
+                        else if(currentDensity <= 0.24f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::REDSTONE;
+                        else if(currentDensity <= 0.35f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::COAL;
+                        else if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::IRON;
+                        else blocks[y][(x*REGION_SIZE + z)] = VOX_Inventory::BlockIds::STONE;
                     }
                 }
             }
@@ -141,7 +142,7 @@ namespace VOX_World{
             for(int y = 0; y < WORLD_HEIGHT; y ++){
                 for(int z = 0; z < REGION_SIZE; z ++){
                     ind = x*REGION_SIZE + z;
-                    if(blocks[y][ind] == BlockIds::GRASS && VOX_World::blocks[blocks[y + 1][ind]].visible == true) blocks[y][ind] = BlockIds::DIRT;
+                    if(blocks[y][ind] == VOX_Inventory::BlockIds::GRASS && VOX_World::blocks[blocks[y + 1][ind]].visible == true) blocks[y][ind] = VOX_Inventory::BlockIds::DIRT;
                 }
             }
         }
@@ -237,7 +238,7 @@ namespace VOX_World{
         int xPrime = (int) x;
         int yPrime = (int) y;
         int zPrime = (int) z;
-        if(yPrime >= WORLD_HEIGHT || yPrime < 0) return BlockIds::AIR;
+        if(yPrime >= WORLD_HEIGHT || yPrime < 0) return VOX_Inventory::BlockIds::AIR;
         Region *r = getRegion(x, y, z);
         if(r != 0){
             xPrime -= (r->xOffset);
@@ -245,7 +246,7 @@ namespace VOX_World{
             if(data) return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime];
             return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime] & 0x00FF;
         }
-        return BlockIds::AIR;
+        return VOX_Inventory::BlockIds::AIR;
     }
 
     void World::setBlock(float x, float y, float z, short blockData){
@@ -378,13 +379,14 @@ namespace VOX_World{
         sf::Vector3f lookingAt = getLookingAt();
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 35){
             tickCounter = 0;
-            world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, BlockIds::AIR);
+            inventory->addItem(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false), 1);
+            world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::AIR);
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
-            if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false) != BlockIds::AIR){
+            if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false) != VOX_Inventory::BlockIds::AIR){
                 tickCounter = 0;
                 lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
-                world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, BlockIds::DIRT);
+                world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::DIRT);
             }
         }
 
@@ -422,11 +424,72 @@ namespace VOX_World{
 
     }
 
+    void Player::renderInventory(float width){
+        float blockSize = 48.0f, border = 3.0f;
+        float inventoryWidth = (blockSize*9) + border, inventoryHeight = blockSize;
+        float x = (width - inventoryWidth) / 2.0f, y = 0.0f, drawIncrement = 1.0 / 32.0f;
+        float *texCoords;
+        int item, quantity;
+
+        // Used for drawing inventory textures
+        glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
+
+        glPushAttrib(GL_CURRENT_BIT);
+        glColor3f(0.3f, 0.3f, 0.3f);
+        glBegin(GL_QUADS);
+            glVertex2f(x, y);
+            glVertex2f(x + inventoryWidth + (border * 9), y);
+            glVertex2f(x + inventoryWidth + (border * 9), y + inventoryHeight + border * 2);
+            glVertex2f(x, y + inventoryHeight + border * 2);
+        glEnd();
+
+        x += border;
+        y += border;
+
+        for(int i = 0; i < 9; i ++){
+            item = inventory->getSlot(i, false);
+            quantity = inventory->getSlot(i, true) >> 24;
+
+            glColor3f(0.5f, 0.5f, 0.5f);
+            glBegin(GL_QUADS);
+                glVertex2f(x, y);
+                glVertex2f(x + blockSize, y);
+                glVertex2f(x + blockSize, y + inventoryHeight);
+                glVertex2f(x, y + inventoryHeight);
+            glEnd();
+
+            if(item != NULL_ITEM){
+                //std::cout << " Current item being rendered: " << item << std::endl;
+                texCoords = blocks[item].texCoords;
+                glColor3f(1.0f, 1.0f, 1.0f);
+                glEnable(GL_TEXTURE_2D);
+                glBegin(GL_QUADS);
+                    glTexCoord2f(texCoords[1], texCoords[0]); glVertex2f(x, y);
+                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0]); glVertex2f(x + blockSize, y);
+                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0] + drawIncrement); glVertex2f(x + blockSize, y + inventoryHeight);
+                    glTexCoord2f(texCoords[1], texCoords[0] + drawIncrement); glVertex2f(x, y + inventoryHeight);
+                glEnd();
+                glDisable(GL_TEXTURE_2D);
+                VOX_Graphics::renderString(x, y + 16, std::to_string(quantity));
+            }
+
+            x += border + blockSize;
+        }
+
+
+        glPopAttrib();
+    }
+
+    Player::~Player(){
+        delete inventory;
+    }
+
     Player::Player(World *world, float x, float y, float z){
         this->x = x;
         this->y = y;
         this->z = z;
         this->world = world;
+        this->inventory = new VOX_Inventory::Inventory(40);
     }
 
 }

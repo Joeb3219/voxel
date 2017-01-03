@@ -7,7 +7,7 @@ EXE_NAME := vox
 all: clean vox
 
 vox: main.cpp
-	$(CC) -g -o $(EXE_NAME) $(LIB_ALL) world.cpp fileIO.cpp math.cpp camera.cpp renderable.cpp main.cpp $(LIBS)
+	$(CC) -g -o $(EXE_NAME) $(LIB_ALL) *.cpp $(LIBS)
 
 clean:
 	rm -rf *.o $(EXE_NAME)
