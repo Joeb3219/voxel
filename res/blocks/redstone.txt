@@ -1,0 +1,9 @@
+<block>
+    <data>
+        <name>Redstone</name>
+        <id>12</id>
+        <texture>2:4,2:4,2:4,2:4,2:4,2:4</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </data>
+</block>

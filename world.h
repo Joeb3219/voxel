@@ -5,12 +5,13 @@
 #include "lib/fastNoise/FastNoise.h"
 
 #define WORLD_HEIGHT 128
-#define REGION_SIZE 16
+#define REGION_SIZE 64
 #define TYPICAL_GROUND 48
 
 namespace VOX_World{
 
-    enum BlockIds{AIR = 0, GRASS = 1, DIRT = 2};
+    enum BlockIds{AIR = 0, GRASS = 1, DIRT = 2, STONE = 3, SAND = 4, GRAVEL = 5, WOOD = 6, GOLD = 7,
+        IRON = 8, COAL = 9, DIAMOND = 10, REDSTONE = 11};
 
     enum Biome{GRASSLAND};
 
