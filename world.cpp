@@ -13,7 +13,7 @@ namespace VOX_World{
 
     Block *blocks;
 
-    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture){
+    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density){
         this->needsUpdate = true;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
@@ -38,7 +38,10 @@ namespace VOX_World{
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     if(y >= totalHeight) blocks[y][(x*REGION_SIZE + z)] = BlockIds::AIR;
                     else{
-                        blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
+                        float currentDensity = density->GetNoise(x + this->xOffset, y, z + this->zOffset);
+                        if(currentDensity <= 0) blocks[y][(x*REGION_SIZE + z)] = BlockIds::AIR;
+                        else if(currentDensity <= 0.5f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
+                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
                     }
                 }
             }
@@ -230,17 +233,20 @@ namespace VOX_World{
     }
 
     World::World(int seed){
-        FastNoise height, moisture;
+        FastNoise height, moisture, density;
         height.SetNoiseType(FastNoise::SimplexFractal);
         height.SetSeed(seed);
         height.SetFractalOctaves(4);
         moisture.SetNoiseType(FastNoise::SimplexFractal);
         moisture.SetSeed(seed * 2);
         moisture.SetFractalOctaves(8);
-        regions.push_back(new Region(0, 0, &height, &moisture));
-        regions.push_back(new Region(1, 0, &height, &moisture));
-        regions.push_back(new Region(0, 1, &height, &moisture));
-        regions.push_back(new Region(1, 1, &height, &moisture));
+        density.SetNoiseType(FastNoise::SimplexFractal);
+        density.SetSeed(seed * 2);
+        density.SetFractalOctaves(8);
+        regions.push_back(new Region(0, 0, &height, &moisture, &density));
+        regions.push_back(new Region(1, 0, &height, &moisture, &density));
+        regions.push_back(new Region(0, 1, &height, &moisture, &density));
+        regions.push_back(new Region(1, 1, &height, &moisture, &density));
     }
 
     World::~World(){

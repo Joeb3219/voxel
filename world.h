@@ -36,7 +36,7 @@ namespace VOX_World{
     public:
         bool needsUpdate;
         int xOffset, zOffset;
-        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture);
+        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density);
         Biome biome;
         short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         void render();
