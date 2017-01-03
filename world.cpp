@@ -36,11 +36,51 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    if(y >= totalHeight) blocks[y][(x*REGION_SIZE + z)] = BlockIds::AIR;
-                    else{
-                        float currentDensity = density->GetNoise(x + this->xOffset, y, z + this->zOffset);
-                        if(currentDensity <= 0) blocks[y][(x*REGION_SIZE + z)] = BlockIds::AIR;
-                        else if(currentDensity <= 0.5f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
+                    float currentDensity = VOX_Math::convertScale(density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
+                    if(y >= totalHeight || currentDensity <= 0){
+                        blocks[y][(x*REGION_SIZE + z)] = BlockIds::AIR;
+                        continue;
+                    }
+                    if(y >= TYPICAL_GROUND){
+                        if(currentDensity <= 0.75f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
+                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                    }else if(y >= 58){
+                        if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRASS;
+                        else if(currentDensity <= 0.55f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
+                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                    }else if(y >= 50){
+                        if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
+                        else if(currentDensity <= 0.30f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
+                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                    }else if(y >= 40){
+                        if(currentDensity <= 0.09f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
+                        else if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.30f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
+                        else if(currentDensity <= 0.41f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
+                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                    }else if(y >= 30){
+                        if(currentDensity <= 0.10f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
+                        else if(currentDensity <= 0.20f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.32f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
+                        else if(currentDensity <= 0.46f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
+                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                    }else if(y >= 16){
+                        if(currentDensity <= 0.12f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
+                        else if(currentDensity <= 0.15f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.29f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
+                        else if(currentDensity <= 0.34f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GOLD;
+                        else if(currentDensity <= 0.40f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::REDSTONE;
+                        else if(currentDensity <= 0.47f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
+                        else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
+                    }else{
+                        if(currentDensity <= 0.05) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIRT;
+                        else if(currentDensity <= 0.12f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GRAVEL;
+                        else if(currentDensity <= 0.16f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::DIAMOND;
+                        else if(currentDensity <= 0.22f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::GOLD;
+                        else if(currentDensity <= 0.24f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::REDSTONE;
+                        else if(currentDensity <= 0.35f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::COAL;
+                        else if(currentDensity <= 0.45f) blocks[y][(x*REGION_SIZE + z)] = BlockIds::IRON;
                         else blocks[y][(x*REGION_SIZE + z)] = BlockIds::STONE;
                     }
                 }
@@ -241,8 +281,9 @@ namespace VOX_World{
         moisture.SetSeed(seed * 2);
         moisture.SetFractalOctaves(8);
         density.SetNoiseType(FastNoise::SimplexFractal);
-        density.SetSeed(seed * 2);
-        density.SetFractalOctaves(8);
+        density.SetSeed(seed / 3);
+        density.SetFrequency(0.5f);
+        density.SetFractalOctaves(4);
         regions.push_back(new Region(0, 0, &height, &moisture, &density));
         regions.push_back(new Region(1, 0, &height, &moisture, &density));
         regions.push_back(new Region(0, 1, &height, &moisture, &density));
@@ -271,12 +312,12 @@ namespace VOX_World{
     sf::Vector3f Player::getLookingAt(bool adjacent){
         int steps = 32; // Moves roughly 1/4 of a block at a time.
         sf::Vector3f currentPos = getPosition();
-        currentPos.y += 3;
+        currentPos.y += 2.5f;
         sf::Vector3f lookingAt;
         float rYRadians = (PI / 180.0) * rY;
         float rXRadians = (PI / 180.0) * (rX + 90);
         lookingAt.x = x - ((float) cos(rXRadians) * 8.f * fabs(cos(rYRadians)));
-        lookingAt.y = (y + 3) - ((float) sin(rYRadians) * 8.f);
+        lookingAt.y = (y + 2.5f) - ((float) sin(rYRadians) * 8.f);
         lookingAt.z = z - ((float) sin(rXRadians) * 8.f * fabs(cos(rYRadians)));
         sf::Vector3f stepVector = (currentPos - lookingAt) * (1.0f / steps);
         // Now we hone into the vector to find a collision.
@@ -326,9 +367,9 @@ namespace VOX_World{
         }else{
             for(float j = y; j < newY; j += 0.0125f){
                 y = j;
-                if(blocks[world->getBlock(x, j + 3, z, false)].solid == true){
+                if(blocks[world->getBlock(x, j + 2.5f, z, false)].solid == true){
                     yVelocity = 0;
-                    y = (float) ((int) j + 3);
+                    y = (float) ((int) j + 2.5f);
                     break;
                 }
             }
