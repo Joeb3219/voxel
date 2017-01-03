@@ -11,6 +11,19 @@
 
 namespace VOX_Inventory{
 
+    bool Inventory::modifySlot(int slot, char num){
+        if(slot < 0 || slot >= numSlots) return false;
+        int item = contents[slot] & 0x00FFFFFF, quantity = (contents[slot] & 0xFF000000) >> 24;
+        if(num > 0){
+            if(getMaxStack(slot) <= quantity + num) return false;
+            setContents(slot, item, quantity + num);
+            return true;
+        }
+        if(quantity + num < 0) return false;
+        setContents(slot, item, quantity + num);
+        return true;
+    }
+
     // Adds the indicated item through the inventory, dividing it up as needed.
     // Returns true if operation finished successfully (ie: num equals zero after all is said and done).
     bool Inventory::addItem(int id, char num){
@@ -44,7 +57,8 @@ namespace VOX_Inventory{
 
     bool Inventory::setContents(int slot, int id, char num){
         if(slot > numSlots || slot < 0) return false;
-        contents[slot] = (num << 24) | (id);
+        if(num == 0) contents[slot] = 0xFFFFFFFF;
+        else contents[slot] = (num << 24) | (id);
         return true;
     }
 
@@ -56,6 +70,7 @@ namespace VOX_Inventory{
     Inventory::Inventory(int numSlots){
         this->numSlots = numSlots;
         this->contents = new unsigned int[numSlots];
+        this->selectedSlot = 0;
         for(int i = 0; i < numSlots; i ++) contents[i] = 0xFFFFFFFF;
     }
 

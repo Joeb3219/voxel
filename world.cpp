@@ -384,11 +384,24 @@ namespace VOX_World{
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
             if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false) != VOX_Inventory::BlockIds::AIR){
-                tickCounter = 0;
-                lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
-                world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::DIRT);
+                if(inventory->getSelectedSlot(false) != NULL_ITEM){
+                    tickCounter = 0;
+                    lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
+                    world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, inventory->getSelectedSlot(false));
+                    inventory->modifySlot(inventory->selectedSlot, -1);
+                }
             }
         }
+
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) inventory->selectedSlot = 0;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) inventory->selectedSlot = 1;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) inventory->selectedSlot = 2;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) inventory->selectedSlot = 3;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) inventory->selectedSlot = 4;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num6)) inventory->selectedSlot = 5;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num7)) inventory->selectedSlot = 6;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num8)) inventory->selectedSlot = 7;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num9)) inventory->selectedSlot = 8;
 
         if(rX > 360) rX -= 360;
         if(rX < 0) rX += 360;
@@ -450,7 +463,8 @@ namespace VOX_World{
             item = inventory->getSlot(i, false);
             quantity = inventory->getSlot(i, true) >> 24;
 
-            glColor3f(0.5f, 0.5f, 0.5f);
+            if(i == inventory->selectedSlot) glColor3f(0.5f, 0.5f, 0.5f);
+            else glColor3f(0.8f, 0.8f, 0.8f);
             glBegin(GL_QUADS);
                 glVertex2f(x, y);
                 glVertex2f(x + blockSize, y);
@@ -464,10 +478,10 @@ namespace VOX_World{
                 glColor3f(1.0f, 1.0f, 1.0f);
                 glEnable(GL_TEXTURE_2D);
                 glBegin(GL_QUADS);
-                    glTexCoord2f(texCoords[1], texCoords[0]); glVertex2f(x, y);
-                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0]); glVertex2f(x + blockSize, y);
-                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0] + drawIncrement); glVertex2f(x + blockSize, y + inventoryHeight);
-                    glTexCoord2f(texCoords[1], texCoords[0] + drawIncrement); glVertex2f(x, y + inventoryHeight);
+                    glTexCoord2f(texCoords[1], texCoords[0]); glVertex2f(x + border, y + border);
+                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0]); glVertex2f(x + blockSize - border, y + border);
+                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0] + drawIncrement); glVertex2f(x + blockSize - border, y + inventoryHeight - border);
+                    glTexCoord2f(texCoords[1], texCoords[0] + drawIncrement); glVertex2f(x + border, y + inventoryHeight - border);
                 glEnd();
                 glDisable(GL_TEXTURE_2D);
                 VOX_Graphics::renderString(x, y + 16, std::to_string(quantity));

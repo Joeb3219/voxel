@@ -19,6 +19,7 @@ namespace VOX_Inventory{
         bool setContents(int slot, int id, char num);
         unsigned int getSlot(int slot, bool quantity = true);
         unsigned int getSelectedSlot(bool quantity = true);
+        bool modifySlot(int slot, char num);
         bool addItem(int id, char num);
         int getNumSlots();
         int getMaxStack(int id);
