@@ -47,22 +47,31 @@ namespace VOX_World{
     }
 
     void Region::buildDisplayList(){
+        if(DL_ID != 0) glDeleteLists(DL_ID, 1);
         DL_ID = glGenLists(1);
         glNewList(DL_ID, GL_COMPILE);
         glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
-        float xPrime, yPrime, zPrime;
+        VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
+        float xPrime, yPrime, zPrime, *texCoords;
         for(int i = 0; i < 256; i ++){
-            if(blocks[i] == 0) break;   // A null pointer
+            if(&VOX_World::blocks[i] == 0 || !VOX_World::blocks[i].visible) continue;   // A null pointer or invisible
+            texCoords = &VOX_World::blocks[i].texCoords[0];
             for(int x = 0; x < REGION_SIZE; x ++){
                 for(int z = 0; z < REGION_SIZE; z ++){
                     for(int y = 0; y < WORLD_HEIGHT; y ++){
                         xPrime = x + xOffset;
                         yPrime = y;
                         zPrime = z + zOffset;
-                        short id = blocks[y][(x*REGION_SIZE + z)];
-                        if(id != i) continue;
-                        if(!isBlockVisible(x, y, z)) continue;
-                        VOX_Graphics::Cube::getInstance().render(xPrime, yPrime, zPrime, &VOX_World::blocks[id].texCoords[0]);
+                        if(blocks[y][(x*REGION_SIZE + z)] != i) continue;
+                        //if(!isBlockVisible(x, y, z)) continue;
+                        // If y is world height or y isn't world height and nothing above, render.
+                        if(y == WORLD_HEIGHT || (y < WORLD_HEIGHT && !VOX_World::blocks[blocks[y + 1][(x * REGION_SIZE) + z]].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords);  // Check if above is visible
+                        if(y == 0 || (y > 0 && !VOX_World::blocks[blocks[y - 1][(x * REGION_SIZE) + z]].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords);             // Check if below is visible
+                        if(x == REGION_SIZE - 1 || (x < REGION_SIZE - 1 && !VOX_World::blocks[blocks[y][((x + 1) * REGION_SIZE) + z]].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords); // Check if right is visible
+                        if(x == 0 || (x > 0 && !VOX_World::blocks[blocks[y][((x - 1) * REGION_SIZE) + z]].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords);          // Check if left is visible
+                        if(z == 0 || (z > 0 && !VOX_World::blocks[blocks[y][((x) * REGION_SIZE) + z - 1]].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords);          // Check if behind is visible
+                        if(z == REGION_SIZE - 1 || (z < REGION_SIZE - 1 && !VOX_World::blocks[blocks[y][((x) * REGION_SIZE) + z + 1]].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords);// Check if forward is visible
+                    //    cube.render(xPrime, yPrime, zPrime, texCoords);
                     }
                 }
             }
