@@ -1,5 +1,6 @@
 #include <iostream>
 #include "inventory.h"
+#include "fileIO.h"
 
 /*
  * Inventory structure:
@@ -10,6 +11,38 @@
  */
 
 namespace VOX_Inventory{
+
+    Item *items;
+
+    Item::Item(){}
+
+    Item::Item(int id, int meta, VOX_FileIO::Tree *tree, std::string blockPath){
+        this->id = id;
+        this->meta = meta;
+        std::string string_name, string_texture;
+        string_name = tree->search(blockPath + ":name");
+        string_texture = tree->search(blockPath + ":texture");
+
+        if(!string_name.empty()) name = string_name;
+
+        if(!string_texture.empty()){
+            std::string currNum("");
+            char c;
+            int j = 0;
+            for(unsigned int i = 0; i < string_texture.size(); i ++){
+                c = string_texture.at(i);
+                if(c == ':' || c == ','){
+                    texCoords[j++] = atoi(currNum.c_str());
+                    currNum = std::string("");
+                }else currNum += c;
+            }
+            texCoords[j++] = atoi(currNum.c_str());
+            for(int i = 0; i < 2; i ++){
+                if(i % 2 == 1) texCoords[i] = (1.0f / 32.0f) * texCoords[i];
+                else texCoords[i] = 1.0f - ((1.0f / 32.0f) * (texCoords[i] + 1));
+            }
+        }
+    }
 
     bool Inventory::modifySlot(int slot, char num){
         if(slot < 0 || slot >= numSlots) return false;
@@ -82,8 +115,14 @@ namespace VOX_Inventory{
         return ((id & 0x00000FFF) < 2048); // We dedicate the first 2048 IDs to blocks, and the next 2048 IDs to items.
     }
 
+    int getDefaultMetaData(int id){
+        if(!isBlock(id)) return items[id - ITEMS_BEGIN].meta;
+        return 0;
+    }
+
     int getMaxStack(int id){
         switch(id){
+            case 2048: return 1;
             default: return 64;
         }
     }

@@ -40,7 +40,6 @@ namespace VOX_World{
         short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         void render();
         void update();
-        bool isBlockVisible(int x, int y, int z);
     };
 
     class World{

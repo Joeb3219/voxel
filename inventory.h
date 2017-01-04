@@ -4,6 +4,9 @@
 #define NULL_ITEM 0x00FFFFFF
 
 #include <string>
+#include "fileIO.h"
+
+#define ITEMS_BEGIN 2048
 
 namespace VOX_Inventory{
 
@@ -18,9 +21,14 @@ namespace VOX_Inventory{
 
     class Item{
     public:
+        Item(int id, int meta, VOX_FileIO::Tree *tree, std::string blockPath);
+        Item();
         std::string name;
-        int id;
+        int id, meta;
+        float texCoords[2] = {0,0};
     };
+
+    extern Item *items;
 
     class Inventory{
     private:

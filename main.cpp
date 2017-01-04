@@ -19,8 +19,7 @@ long int getCurrentTime(){
 }
 
 VOX_World::Block* initBlocks(){
-    VOX_Graphics::textureAtlas = VOX_FileIO::loadBitmapTexture("res/textures.bmp");
-    VOX_World::Block* blocks = new VOX_World::Block[256];
+    VOX_World::Block* blocks = new VOX_World::Block[2048];
     VOX_FileIO::Tree blockData(fopen("res/blocks.txt", "r"));
     VOX_FileIO::Tree_Node *blocksNode = blockData.fetchNode("blocks");
     std::string blockLabel, blockID;
@@ -36,6 +35,26 @@ VOX_World::Block* initBlocks(){
     return blocks;
 }
 
+VOX_Inventory::Item* initItems(){
+    VOX_Inventory::Item *items = new VOX_Inventory::Item[2048];
+    VOX_FileIO::Tree itemData(fopen("res/items.txt", "r"));
+    VOX_FileIO::Tree_Node *blocksNode = itemData.fetchNode("items");
+    std::string itemLabel, itemID;
+    int id, meta;
+    for(unsigned int i = 0; i < blocksNode->children.size(); i ++){
+        itemLabel = blocksNode->children.at(i)->label;
+        itemID = itemData.search("items:" + itemLabel + ":id");
+        if(itemID.empty()){
+            std::cout << "Malformed item data: " << itemLabel << std::endl;
+            continue;
+        }
+        id = atoi(itemID.substr(0, itemID.find_first_of(":")).c_str());
+        meta = atoi( itemID.substr(itemID.find_first_of(":") + 1, itemID.size()).c_str() );
+        items[id - ITEMS_BEGIN] = VOX_Inventory::Item(id, meta, &itemData, "items:" + itemLabel);
+    }
+    return items;
+}
+
 int main(int argc, char **argv){
     glutInit(&argc, argv);
     Camera *camera = new Camera(800, 600);
@@ -45,7 +64,9 @@ int main(int argc, char **argv){
     long int timeSinceFPSCalculation = currentTime;
     int frames = 0;
 
+    VOX_Graphics::textureAtlas = VOX_FileIO::loadBitmapTexture("res/textures.bmp");
     VOX_World::blocks = initBlocks();
+    VOX_Inventory::items = initItems();
     VOX_World::World *world = new VOX_World::World(1337);
 
     VOX_World::Player player(world, 8.f, 90.f, 8.f);
