@@ -44,6 +44,11 @@ namespace VOX_Inventory{
         }
     }
 
+    int extractDataFromId(int id, bool metaData){
+        if(metaData) return (id & 0x00FFF000) >> 16;
+        return id & 0x00000FFF;
+    }
+
     bool Inventory::modifySlot(int slot, char num){
         if(slot < 0 || slot >= numSlots) return false;
         int item = contents[slot] & 0x00FFFFFF, quantity = (contents[slot] & 0xFF000000) >> 24;

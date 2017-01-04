@@ -20,7 +20,7 @@ namespace VOX_World{
     public:
         Block(VOX_FileIO::Tree *tree, std::string blockPath);
         Block();
-        int id = -1, meta = 0;
+        int id = -1, meta = 0, drops, damage;
         std::string name;
         bool visible = false, solid = false;
         float texCoords[12] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f};

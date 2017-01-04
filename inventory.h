@@ -15,7 +15,7 @@ namespace VOX_Inventory{
 
     enum ItemIds{DIAMOND_PICKAXE = 2048};
 
-    bool extractDataFromId(bool metaData = false);
+    int extractDataFromId(int id, bool metaData = false);
     bool isBlock(int id);
     int getMaxStack(int id);
 

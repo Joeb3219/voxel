@@ -147,13 +147,15 @@ namespace VOX_World{
     }
 
     Block::Block(VOX_FileIO::Tree *tree, std::string blockPath){
-        std::string string_id, string_name, string_visible, string_solid;
+        std::string string_id, string_name, string_visible, string_solid, string_damage, string_drops;
         std::string string_texture;
         string_id = tree->search(blockPath + ":id");
         string_name = tree->search(blockPath + ":name");
         string_visible = tree->search(blockPath + ":visible");
         string_solid = tree->search(blockPath + ":solid");
         string_texture = tree->search(blockPath + ":texture");
+        string_damage = tree->search(blockPath + ":damage");
+        string_drops = tree->search(blockPath + ":drops");
 
         if(!string_id.empty()) id = atoi(string_id.c_str());
         if(!string_name.empty()) name = string_name;
@@ -161,6 +163,10 @@ namespace VOX_World{
         else visible = false;
         if(!string_solid.empty() && std::string("true").compare(string_solid) == 0) solid = true;
         else solid = false;
+        if(!string_damage.empty()) damage = atoi(string_damage.c_str());
+        else damage = 0xFF;
+        if(!string_drops.empty()) drops = atoi(string_drops.c_str());
+        else drops = id;
 
         if(!string_texture.empty()){
             std::string currNum("");
@@ -358,13 +364,16 @@ namespace VOX_World{
 
         sf::Vector3f lookingAt = getLookingAt();
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 35){
-            tickCounter = 0;
-            inventory->addItem(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false), 1);
-            world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::AIR);
+            short blockLookingAt = world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false);
+            if(blockLookingAt != 0){
+                tickCounter = 0;
+                inventory->addItem(blocks[VOX_Inventory::extractDataFromId(blockLookingAt)].drops, 1);
+                world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::AIR);
+            }
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
             if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false) != VOX_Inventory::BlockIds::AIR){
-                if(inventory->getSelectedSlot(false) != NULL_ITEM){
+                if(inventory->getSelectedSlot(false) != NULL_ITEM && VOX_Inventory::isBlock(inventory->getSelectedSlot(false))){
                     tickCounter = 0;
                     lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
                     world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, inventory->getSelectedSlot(false));
