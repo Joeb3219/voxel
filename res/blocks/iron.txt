@@ -1,9 +1,0 @@
-<block>
-    <data>
-        <name>Iron</name>
-        <id>8</id>
-        <texture>2:1,2:1,2:1,2:1,2:1,2:1</texture>
-        <visible>true</visible>
-        <solid>true</solid>
-    </data>
-</block>

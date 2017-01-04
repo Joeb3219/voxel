@@ -1,0 +1,11 @@
+<items>
+
+    <item>
+        <name>Diamond Pickaxe</name>
+        <id>2048</id>
+        <texture>27:19</texture>
+        <durability>1562</durability>
+        <speed>3</speed>
+    </item>
+
+</items>

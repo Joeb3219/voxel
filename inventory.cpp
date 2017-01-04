@@ -78,7 +78,11 @@ namespace VOX_Inventory{
         delete [] contents;
     }
 
-    int Inventory::getMaxStack(int id){
+    bool isBlock(int id){
+        return ((id & 0x00000FFF) < 2048); // We dedicate the first 2048 IDs to blocks, and the next 2048 IDs to items.
+    }
+
+    int getMaxStack(int id){
         switch(id){
             default: return 64;
         }

@@ -35,6 +35,20 @@ namespace VOX_FileIO{
         delete head;
     }
 
+    Tree_Node* Tree::fetchNode(std::string path){
+        std::string currentSearch;
+        Tree_Node *ptr = this->head, *temp;
+        while(ptr != 0 && !path.empty()){
+            currentSearch = path.substr(0, path.find_first_of(":"));
+            path = path.substr(path.find_first_of(":") + 1, path.size());
+            temp = ptr->getChild(currentSearch);
+            if(temp == 0) return ptr;
+            ptr = temp;
+        }
+        if(ptr != 0) return ptr;
+        return 0;
+    }
+
     std::string Tree::search(std::string path){
         std::string currentSearch;
         Tree_Node *ptr = this->head, *temp;

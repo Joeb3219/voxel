@@ -2,6 +2,7 @@
 #include <SFML/Window.hpp>
 #include <string>
 #include <vector>
+#include "fileIO.h"
 #include "inventory.h"
 #include "lib/fastNoise/FastNoise.h"
 
@@ -17,7 +18,7 @@ namespace VOX_World{
 
     class Block{
     public:
-        Block(const char *str);
+        Block(VOX_FileIO::Tree *tree, std::string blockPath);
         Block();
         int id = -1, meta = 0;
         std::string name;

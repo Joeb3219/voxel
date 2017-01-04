@@ -1,9 +1,0 @@
-<block>
-    <data>
-        <name>Coal</name>
-        <id>9</id>
-        <texture>2:2,2:2,2:2,2:2,2:2,2:2</texture>
-        <visible>true</visible>
-        <solid>true</solid>
-    </data>
-</block>

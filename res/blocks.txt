@@ -1,0 +1,98 @@
+<blocks>
+
+    <air>
+        <name>Air</name>
+        <id>0</id>
+        <visible>false</visible>
+        <solid>false</solid>
+    </air>
+
+    <coal>
+        <name>Coal</name>
+        <id>9</id>
+        <texture>2:2,2:2,2:2,2:2,2:2,2:2</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </coal>
+
+    <diamond>
+        <name>Diamond</name>
+        <id>10</id>
+        <texture>2:3,2:3,2:3,2:3,2:3,2:3</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </diamond>
+
+    <dirt>
+        <name>Dirt</name>
+        <id>2</id>
+        <texture>0:2,0:2,0:2,0:2,0:2,0:2</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </dirt>
+
+    <gold>
+        <name>Gold</name>
+        <id>7</id>
+        <texture>2:0,2:0,2:0,2:0,2:0,2:0</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </gold>
+
+    <grass>
+        <name>Grass</name>
+        <id>1</id>
+        <texture>0:1,0:1,0:1,0:1,0:0,0:2</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </grass>
+
+    <gravel>
+        <name>Gravel</name>
+        <id>5</id>
+        <texture>0:5,0:5,0:5,0:5,0:5,0:5</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </gravel>
+
+    <iron>
+        <name>Iron</name>
+        <id>8</id>
+        <texture>2:1,2:1,2:1,2:1,2:1,2:1</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </iron>
+
+    <redstone>
+        <name>Redstone</name>
+        <id>11</id>
+        <texture>2:4,2:4,2:4,2:4,2:4,2:4</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </redstone>
+
+    <sand>
+        <name>Sand</name>
+        <id>4</id>
+        <texture>0:4,0:4,0:4,0:4,0:4,0:4</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </sand>
+
+    <stone>
+        <name>Stone</name>
+        <id>3</id>
+        <texture>0:3,0:3,0:3,0:3,0:3,0:3</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </stone>
+
+    <wood>
+        <name>Wood</name>
+        <id>6</id>
+        <texture>1:0,1:0,1:0,1:0,1:1,1:1</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+    </wood>
+
+</blocks>

@@ -1,9 +1,0 @@
-<block>
-    <data>
-        <name>Gold</name>
-        <id>7</id>
-        <texture>2:0,2:0,2:0,2:0,2:0,2:0</texture>
-        <visible>true</visible>
-        <solid>true</solid>
-    </data>
-</block>

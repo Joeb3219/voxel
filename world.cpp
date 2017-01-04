@@ -160,20 +160,14 @@ namespace VOX_World{
 
     }
 
-    Block::Block(const char* str){
-        FILE *file = fopen(str, "r");
-        if(file == 0){
-            std::cout << "Block: File " << str << " does not exist." << std::endl;
-            return;
-        }
-        VOX_FileIO::Tree data(file);
+    Block::Block(VOX_FileIO::Tree *tree, std::string blockPath){
         std::string string_id, string_name, string_visible, string_solid;
         std::string string_texture;
-        string_id = data.search("block:data:id");
-        string_name = data.search("block:data:name");
-        string_visible = data.search("block:data:visible");
-        string_solid = data.search("block:data:solid");
-        string_texture = data.search("block:data:texture");
+        string_id = tree->search(blockPath + ":id");
+        string_name = tree->search(blockPath + ":name");
+        string_visible = tree->search(blockPath + ":visible");
+        string_solid = tree->search(blockPath + ":solid");
+        string_texture = tree->search(blockPath + ":texture");
 
         if(!string_id.empty()) id = atoi(string_id.c_str());
         if(!string_name.empty()) name = string_name;

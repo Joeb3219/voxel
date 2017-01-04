@@ -21,18 +21,18 @@ long int getCurrentTime(){
 VOX_World::Block* initBlocks(){
     VOX_Graphics::textureAtlas = VOX_FileIO::loadBitmapTexture("res/textures.bmp");
     VOX_World::Block* blocks = new VOX_World::Block[256];
-    blocks[VOX_Inventory::BlockIds::AIR] = VOX_World::Block("res/blocks/air.txt");
-    blocks[VOX_Inventory::BlockIds::GRASS] = VOX_World::Block("res/blocks/grass.txt");
-    blocks[VOX_Inventory::BlockIds::DIRT] = VOX_World::Block("res/blocks/dirt.txt");
-    blocks[VOX_Inventory::BlockIds::STONE] = VOX_World::Block("res/blocks/stone.txt");
-    blocks[VOX_Inventory::BlockIds::SAND] = VOX_World::Block("res/blocks/sand.txt");
-    blocks[VOX_Inventory::BlockIds::GRAVEL] = VOX_World::Block("res/blocks/gravel.txt");
-    blocks[VOX_Inventory::BlockIds::WOOD] = VOX_World::Block("res/blocks/wood.txt");
-    blocks[VOX_Inventory::BlockIds::GOLD] = VOX_World::Block("res/blocks/gold.txt");
-    blocks[VOX_Inventory::BlockIds::IRON] = VOX_World::Block("res/blocks/iron.txt");
-    blocks[VOX_Inventory::BlockIds::COAL] = VOX_World::Block("res/blocks/coal.txt");
-    blocks[VOX_Inventory::BlockIds::DIAMOND] = VOX_World::Block("res/blocks/diamond.txt");
-    blocks[VOX_Inventory::BlockIds::REDSTONE] = VOX_World::Block("res/blocks/redstone.txt");
+    VOX_FileIO::Tree blockData(fopen("res/blocks.txt", "r"));
+    VOX_FileIO::Tree_Node *blocksNode = blockData.fetchNode("blocks");
+    std::string blockLabel, blockID;
+    for(unsigned int i = 0; i < blocksNode->children.size(); i ++){
+        blockLabel = blocksNode->children.at(i)->label;
+        blockID = blockData.search("blocks:" + blockLabel + ":id");
+        if(blockID.empty()){
+            std::cout << "Malformed block data: " << blockLabel << std::endl;
+            continue;
+        }
+        blocks[atoi(blockID.c_str())] = VOX_World::Block(&blockData, "blocks:" + blockLabel);
+    }
     return blocks;
 }
 

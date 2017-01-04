@@ -1,9 +1,0 @@
-<block>
-    <data>
-        <name>Diamond</name>
-        <id>11</id>
-        <texture>2:3,2:3,2:3,2:3,2:3,2:3</texture>
-        <visible>true</visible>
-        <solid>true</solid>
-    </data>
-</block>

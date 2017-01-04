@@ -1,9 +1,0 @@
-<block>
-    <data>
-        <name>Dirt</name>
-        <id>2</id>
-        <texture>0:2,0:2,0:2,0:2,0:2,0:2</texture>
-        <visible>true</visible>
-        <solid>true</solid>
-    </data>
-</block>

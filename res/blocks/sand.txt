@@ -1,9 +1,0 @@
-<block>
-    <data>
-        <name>Sand</name>
-        <id>4</id>
-        <texture>0:4,0:4,0:4,0:4,0:4,0:4</texture>
-        <visible>true</visible>
-        <solid>true</solid>
-    </data>
-</block>

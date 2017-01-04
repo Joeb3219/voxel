@@ -14,9 +14,8 @@ namespace VOX_FileIO{
     std::string getLabelFromTag(std::string tag);
 
     class Tree_Node{
-    private:
-        std::vector<Tree_Node *> children;
     public:
+        std::vector<Tree_Node *> children;
         std::string content, label;
         ~Tree_Node();
         Tree_Node* getChild(std::string label);
@@ -30,6 +29,7 @@ namespace VOX_FileIO{
     public:
         Tree(FILE *file);
         ~Tree();
+        Tree_Node* fetchNode(std::string path);
         std::string search(std::string path);
     };
 
