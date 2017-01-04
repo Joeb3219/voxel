@@ -37,7 +37,10 @@ namespace VOX_World{
         int xOffset, zOffset;
         Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density);
         Biome biome;
-        short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
+        void modifyMeta(int x, int y, int z, unsigned short newMeta);
+        void setBlock(int x, int y, int z, int blockID);
+        unsigned short getBlock(int x, int y, int z);
+        unsigned short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         void render();
         void update();
     };
@@ -49,9 +52,9 @@ namespace VOX_World{
         World(int seed = 0);
         ~World();
         Region* getRegion(float x, float y, float z);
-        Block getBlock(short identifier);
-        short getBlock(float x, float y, float z, bool data = true);
-        void setBlock(float x, float y, float z, short blockData);
+        Block getBlock(unsigned short identifier);
+        unsigned short getBlock(float x, float y, float z, bool data = true);
+        void setBlock(float x, float y, float z, unsigned short blockData);
         sf::Vector3f getCollision(sf::Vector3f start, sf::Vector3f end);
         void update();
         void render();
