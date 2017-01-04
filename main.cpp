@@ -19,7 +19,7 @@ long int getCurrentTime(){
 }
 
 VOX_World::Block* initBlocks(){
-    VOX_World::Block* blocks = new VOX_World::Block[2048];
+    VOX_World::Block* blocks = new VOX_World::Block[16];
     VOX_FileIO::Tree blockData(fopen("res/blocks.txt", "r"));
     VOX_FileIO::Tree_Node *blocksNode = blockData.fetchNode("blocks");
     std::string blockLabel, blockID;
