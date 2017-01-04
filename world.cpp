@@ -14,7 +14,8 @@ namespace VOX_World{
 
     Block *blocks;
 
-    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density){
+    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, std::vector<Region*> *regions){
+        this->regionList = regionList;
         this->needsUpdate = true;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
@@ -90,6 +91,18 @@ namespace VOX_World{
 
     }
 
+    bool Region::isInRegion(float x, float y, float z){
+        if(y > WORLD_HEIGHT) return false;
+        int xPrime = abs(x);
+        int zPrime = abs(z);
+        int xRegion = (((xPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
+        int zRegion = (((zPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
+        if(x < 0) xRegion = -xRegion - REGION_SIZE;
+        if(z < 0) zRegion = -zRegion - REGION_SIZE;
+        if(xRegion == this->xOffset && zRegion == this->zOffset) return true;
+        return false;
+    }
+
     unsigned short Region::getBlock(int x, int y, int z){
         return blocks[y][x*REGION_SIZE + z] & 0x00FF;
     }
@@ -99,9 +112,17 @@ namespace VOX_World{
         blocks[y][x*REGION_SIZE + z] = (((meta & 0x00FF) << 8) | (blockID & 0x00FF));
     }
 
-    void Region::modifyMeta(int x, int y, int z, unsigned short newMeta){
-        unsigned short id = blocks[y][x*REGION_SIZE + z];
-        blocks[y][x*REGION_SIZE + z] = (newMeta << 8) | (id & 0x00FF);
+    void Region::convertCoordinates(float *x, float *y, float *z){
+        int xPrime = abs(*x);
+        int zPrime = abs(*z);
+        (*x) = xPrime - this->xOffset;
+        (*z) = zPrime - this->zOffset;
+    }
+
+    void Region::modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords){
+        if(!correctCoords) convertCoordinates(&x, &y, &z);
+        unsigned short id = blocks[(int)y][(int)x*REGION_SIZE + (int)z];
+        blocks[(int)y][(int)x*REGION_SIZE + (int)z] = (newMeta << 8) | (id & 0x00FF);
     }
 
     void Region::buildDisplayList(){
@@ -218,14 +239,8 @@ namespace VOX_World{
     }
 
     Region* World::getRegion(float x, float y, float z){
-        int xPrime = abs(x);
-        int zPrime = abs(z);
-        int xRegion = (((xPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
-        int zRegion = (((zPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
-        if(x < 0) xRegion = -xRegion - REGION_SIZE;
-        if(z < 0) zRegion = -zRegion - REGION_SIZE;
         for(unsigned int i = 0; i < regions.size(); i ++){
-            if(regions[i]->xOffset == xRegion && regions[i]->zOffset == zRegion) return regions[i];
+            if(regions[i]->isInRegion(x, y, z)) return regions[i];
         }
         return 0;
     }
@@ -285,10 +300,10 @@ namespace VOX_World{
         density.SetSeed(seed / 3);
         density.SetFrequency(0.5f);
         density.SetFractalOctaves(4);
-        regions.push_back(new Region(0, 0, &height, &moisture, &density));
-        regions.push_back(new Region(1, 0, &height, &moisture, &density));
-        regions.push_back(new Region(0, 1, &height, &moisture, &density));
-        regions.push_back(new Region(1, 1, &height, &moisture, &density));
+        regions.push_back(new Region(0, 0, &height, &moisture, &density, &regions));
+        regions.push_back(new Region(1, 0, &height, &moisture, &density, &regions));
+        regions.push_back(new Region(0, 1, &height, &moisture, &density, &regions));
+        regions.push_back(new Region(1, 1, &height, &moisture, &density, &regions));
     }
 
     World::~World(){
@@ -311,15 +326,15 @@ namespace VOX_World{
     }
 
     sf::Vector3f Player::getLookingAt(bool adjacent){
-        int steps = 32; // Moves roughly 1/4 of a block at a time.
+        int steps = 16; // Moves roughly 1/4 of a block at a time.
         sf::Vector3f currentPos = getPosition();
         currentPos.y += 2.5f;
         sf::Vector3f lookingAt;
         float rYRadians = (PI / 180.0) * rY;
         float rXRadians = (PI / 180.0) * (rX + 90);
-        lookingAt.x = x - ((float) cos(rXRadians) * 8.f * fabs(cos(rYRadians)));
-        lookingAt.y = (y + 2.5f) - ((float) sin(rYRadians) * 8.f);
-        lookingAt.z = z - ((float) sin(rXRadians) * 8.f * fabs(cos(rYRadians)));
+        lookingAt.x = x - ((float) cos(rXRadians) * 4.f * fabs(cos(rYRadians)));
+        lookingAt.y = (y + 2.5f) - ((float) sin(rYRadians) * 4.f);
+        lookingAt.z = z - ((float) sin(rXRadians) * 4.f * fabs(cos(rYRadians)));
         sf::Vector3f stepVector = (currentPos - lookingAt) * (1.0f / steps);
         // Now we hone into the vector to find a collision.
         for(int i = 0; i < steps; i ++){

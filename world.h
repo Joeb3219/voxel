@@ -7,7 +7,7 @@
 #include "lib/fastNoise/FastNoise.h"
 
 #define WORLD_HEIGHT 128
-#define REGION_SIZE 64
+#define REGION_SIZE 16
 #define TYPICAL_GROUND 48
 
 namespace VOX_World{
@@ -32,15 +32,18 @@ namespace VOX_World{
     private:
         int DL_ID = 0;
         void buildDisplayList();
+        std::vector<Region*> *regionList;
+        void convertCoordinates(float *x, float *y, float *z);
     public:
         bool needsUpdate;
         int xOffset, zOffset;
-        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density);
+        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, std::vector<Region*> *regionsList);
         Biome biome;
-        void modifyMeta(int x, int y, int z, unsigned short newMeta);
+        void modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords = false);
         void setBlock(int x, int y, int z, int blockID);
         unsigned short getBlock(int x, int y, int z);
         unsigned short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
+        bool isInRegion(float x, float y, float z);
         void render();
         void update();
     };
