@@ -14,8 +14,10 @@ namespace VOX_World{
 
     Block *blocks;
 
-    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, std::vector<Region*> *regions){
-        this->regionList = regionList;
+    Region::Region(){}
+
+    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, Region **regions){
+        this->regionList = regions;
         this->needsUpdate = true;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
@@ -142,13 +144,12 @@ namespace VOX_World{
                         yPrime = y;
                         zPrime = z + zOffset;
                         if((getBlock(x, y, z)) != i) continue;
-                        // If y is world height or y isn't world height and nothing above, render.
-                        if(y == WORLD_HEIGHT || (y < WORLD_HEIGHT && !VOX_World::blocks[getBlock(x, y + 1, z)].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords);  // Check if above is visible
-                        if(y == 0 || (y > 0 && !VOX_World::blocks[getBlock(x, y - 1, z)].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords);             // Check if below is visible
-                        if(x == REGION_SIZE - 1 || (x < REGION_SIZE - 1 && !VOX_World::blocks[getBlock(x + 1, y, z)].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords); // Check if right is visible
-                        if(x == 0 || (x > 0 && !VOX_World::blocks[getBlock(x - 1, y, z)].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords);          // Check if left is visible
-                        if(z == 0 || (z > 0 && !VOX_World::blocks[getBlock(x, y, z - 1)].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords);          // Check if behind is visible
-                        if(z == REGION_SIZE - 1 || (z < REGION_SIZE - 1 && !VOX_World::blocks[getBlock(x, y, z + 1)].visible)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords);// Check if forward is visible
+                        if(!checkSurroundingsIsVisible(x, y + 1, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords);
+                        if(!checkSurroundingsIsVisible(x, y - 1, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords);
+                        if(!checkSurroundingsIsVisible(x + 1, y, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords);
+                        if(!checkSurroundingsIsVisible(x - 1, y, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords);
+                        if(!checkSurroundingsIsVisible(x, y, z + 1)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords);
+                        if(!checkSurroundingsIsVisible(x, y, z - 1)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords);
                     }
                 }
             }
@@ -157,13 +158,31 @@ namespace VOX_World{
         glEndList();
     }
 
+    bool Region::checkSurroundingsIsVisible(int x, int y, int z){
+        float xPrime = x + this->xOffset;
+        float yPrime = y;
+        float zPrime = z + this->zOffset;
+        if(y <= 0 || y >= WORLD_HEIGHT - 1) return false;
+        if((x > 0 && x < REGION_SIZE - 1) && (z > 0 && z < REGION_SIZE - 1)) return VOX_World::blocks[getBlock(x, y, z)].visible;
+        else{
+            x += this->xOffset;
+            y += this->zOffset;
+            for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+                if(regionList[i] != 0 && regionList[i]->isInRegion(xPrime, yPrime, zPrime)){
+                    return VOX_World::blocks[regionList[i]->getBlock(xPrime - regionList[i]->xOffset, y, zPrime - regionList[i]->zOffset)].visible;
+                }
+            }
+        }
+        return false;
+    }
+
     void Region::update(){
-        int ind;
-        for(int x = 0; x < REGION_SIZE; x ++){
-            for(int y = 0; y < WORLD_HEIGHT; y ++){
-                for(int z = 0; z < REGION_SIZE; z ++){
-                    ind = x*REGION_SIZE + z;
-                    if(blocks[y][ind] == VOX_Inventory::BlockIds::GRASS && VOX_World::blocks[blocks[y + 1][ind]].visible == true) blocks[y][ind] = VOX_Inventory::BlockIds::DIRT;
+        if(needsUpdate){
+            for(int x = 0; x < REGION_SIZE; x ++){
+                for(int y = 0; y < WORLD_HEIGHT; y ++){
+                    for(int z = 0; z < REGION_SIZE; z ++){
+                        if(getBlock(x, y, z) == VOX_Inventory::BlockIds::GRASS && VOX_World::blocks[getBlock(x, y + 1, z)].visible == true) setBlock(x, y, z, VOX_Inventory::BlockIds::DIRT);
+                    }
                 }
             }
         }
@@ -227,20 +246,20 @@ namespace VOX_World{
     }
 
     void World::update(){
-        for(unsigned int i = 0; i < regions.size(); i ++){
-            if(regions.at(i)->needsUpdate) regions.at(i)->update();
+        for(unsigned int i = 0; i < NUM_REGIONS_LOADED; i ++){
+            if(regions[i] != 0 && regions[i]->needsUpdate) regions[i]->update();
         }
     }
 
     void World::render(){
-        for(unsigned int i = 0; i < regions.size(); i ++){
-            regions.at(i)->render();
+        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+            if(regions[i] != 0) regions[i]->render();
         }
     }
 
     Region* World::getRegion(float x, float y, float z){
-        for(unsigned int i = 0; i < regions.size(); i ++){
-            if(regions[i]->isInRegion(x, y, z)) return regions[i];
+        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+            if(regions[i] != 0 && regions[i]->isInRegion(x, y, z)) return regions[i];
         }
         return 0;
     }
@@ -289,6 +308,7 @@ namespace VOX_World{
     }
 
     World::World(int seed){
+        regions = new Region*[NUM_REGIONS_LOADED];
         FastNoise height, moisture, density;
         height.SetNoiseType(FastNoise::SimplexFractal);
         height.SetSeed(seed);
@@ -300,16 +320,19 @@ namespace VOX_World{
         density.SetSeed(seed / 3);
         density.SetFrequency(0.5f);
         density.SetFractalOctaves(4);
-        regions.push_back(new Region(0, 0, &height, &moisture, &density, &regions));
-        regions.push_back(new Region(1, 0, &height, &moisture, &density, &regions));
-        regions.push_back(new Region(0, 1, &height, &moisture, &density, &regions));
-        regions.push_back(new Region(1, 1, &height, &moisture, &density, &regions));
+        for(int i = 0; i < NUM_REGIONS_LOADED; i ++) regions[i] = 0;
+        for(int x = 0; x < 3; x ++){
+            for(int z = 0; z < 3; z ++){
+                regions[x*5 + z] = new Region(x, z, &height, &moisture, &density, regions);
+            }
+        }
     }
 
     World::~World(){
-        for(unsigned int i = 0; i < regions.size(); i ++){
-            delete regions[i];
+        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+            if(regions[i] != 0) delete regions[i];
         }
+        delete regions;
     }
 
     sf::Vector3f Player::getPosition(){

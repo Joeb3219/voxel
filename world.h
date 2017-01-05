@@ -9,6 +9,7 @@
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 16
 #define TYPICAL_GROUND 48
+#define NUM_REGIONS_LOADED 26
 
 namespace VOX_World{
 
@@ -32,25 +33,27 @@ namespace VOX_World{
     private:
         int DL_ID = 0;
         void buildDisplayList();
-        std::vector<Region*> *regionList;
+        Region **regionList;
         void convertCoordinates(float *x, float *y, float *z);
     public:
         bool needsUpdate;
         int xOffset, zOffset;
-        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, std::vector<Region*> *regionsList);
+        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, Region **regionsList);
+        Region();
         Biome biome;
         void modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords = false);
         void setBlock(int x, int y, int z, int blockID);
         unsigned short getBlock(int x, int y, int z);
         unsigned short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         bool isInRegion(float x, float y, float z);
+        bool checkSurroundingsIsVisible(int x, int y, int z);
         void render();
         void update();
     };
 
     class World{
     private:
-        std::vector<Region*> regions;
+        Region **regions;
     public:
         World(int seed = 0);
         ~World();
