@@ -292,6 +292,19 @@ namespace VOX_World{
             zPrime -= (r->zOffset);
             r->setBlock(xPrime, yPrime, zPrime, blockData & 0x00FF);
             r->needsUpdate = true;
+            if(xPrime == 0){
+                r = getRegion(x - REGION_SIZE, y, z);
+                if(r != 0) r->needsUpdate = true;
+            }else if(xPrime == REGION_SIZE - 1){
+                r = getRegion(x + REGION_SIZE, y, z);
+                if(r != 0) r->needsUpdate = true;
+            }else if(zPrime == 0){
+                r = getRegion(x, y, z - REGION_SIZE);
+                if(r != 0) r->needsUpdate = true;
+            }else if(zPrime == REGION_SIZE - 1){
+                r = getRegion(x, y, z + REGION_SIZE);
+                if(r != 0) r->needsUpdate = true;
+            }
         }
     }
 
