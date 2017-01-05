@@ -163,10 +163,8 @@ namespace VOX_World{
         float yPrime = y;
         float zPrime = z + this->zOffset;
         if(y <= 0 || y >= WORLD_HEIGHT - 1) return false;
-        if((x > 0 && x < REGION_SIZE - 1) && (z > 0 && z < REGION_SIZE - 1)) return VOX_World::blocks[getBlock(x, y, z)].visible;
+        if((x >= 0 && x < REGION_SIZE - 1) && (z >= 0 && z < REGION_SIZE - 1)) return VOX_World::blocks[getBlock(x, y, z)].visible;
         else{
-            x += this->xOffset;
-            y += this->zOffset;
             for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
                 if(regionList[i] != 0 && regionList[i]->isInRegion(xPrime, yPrime, zPrime)){
                     return VOX_World::blocks[regionList[i]->getBlock(xPrime - regionList[i]->xOffset, y, zPrime - regionList[i]->zOffset)].visible;
