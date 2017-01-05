@@ -93,6 +93,46 @@ namespace VOX_World{
 
     }
 
+    Region::Region(float xOffset, float zOffset, FILE *file, Region **regions){
+        this->regionList = regions;
+        this->xOffset = xOffset * REGION_SIZE;
+        this->zOffset = zOffset * REGION_SIZE;
+        unsigned short block;
+        char c;
+        for(int x = 0; x < REGION_SIZE; x ++){
+            for(int z = 0; z < REGION_SIZE; z ++){
+                for(int y = 0; y < WORLD_HEIGHT; y ++){
+                    c = fgetc(file);
+                    block = (c << 8);
+                    c = fgetc(file);
+                    block |= c;
+                    blocks[y][x*REGION_SIZE + z] = block;
+                }
+            }
+        }
+        this->needsUpdate = true;
+    }
+
+    // Destroying a region will save it to saves/xOffet:zOffset.txt
+    Region::~Region(){
+        std::string fileName("saves/");
+        fileName += std::to_string(xOffset) + std::string(":") + std::to_string(zOffset) + std::string(".txt");
+        FILE *file = fopen(fileName.c_str(), "w+");
+        unsigned short block;
+
+        for(int x = 0; x < REGION_SIZE; x ++){
+            for(int z = 0; z < REGION_SIZE; z ++){
+                for(int y = 0; y < WORLD_HEIGHT; y ++){
+                    block = blocks[y][x*REGION_SIZE + z];
+                    fputc((block & 0xFF00) >> 8, file);
+                    fputc((block & 0x00FF), file);
+                }
+            }
+        }
+
+        fclose(file);
+    }
+
     bool Region::isInRegion(float x, float y, float z){
         if(y > WORLD_HEIGHT) return false;
         int xPrime = abs(x);
@@ -320,23 +360,39 @@ namespace VOX_World{
 
     World::World(int seed){
         regions = new Region*[NUM_REGIONS_LOADED];
-        FastNoise height, moisture, density;
-        height.SetNoiseType(FastNoise::SimplexFractal);
-        height.SetSeed(seed);
-        height.SetFractalOctaves(4);
-        moisture.SetNoiseType(FastNoise::SimplexFractal);
-        moisture.SetSeed(seed * 2);
-        moisture.SetFractalOctaves(8);
-        density.SetNoiseType(FastNoise::SimplexFractal);
-        density.SetSeed(seed / 3);
-        density.SetFrequency(0.5f);
-        density.SetFractalOctaves(4);
+        height = new FastNoise();
+        height->SetNoiseType(FastNoise::SimplexFractal);
+        height->SetSeed(seed);
+        height->SetFractalOctaves(4);
+        moisture = new FastNoise();
+        moisture->SetNoiseType(FastNoise::SimplexFractal);
+        moisture->SetSeed(seed * 2);
+        moisture->SetFractalOctaves(8);
+        density = new FastNoise();
+        density->SetNoiseType(FastNoise::SimplexFractal);
+        density->SetSeed(seed / 3);
+        density->SetFrequency(0.5f);
+        density->SetFractalOctaves(4);
         for(int i = 0; i < NUM_REGIONS_LOADED; i ++) regions[i] = 0;
         for(int x = 0; x < 3; x ++){
             for(int z = 0; z < 3; z ++){
-                regions[x*5 + z] = new Region(x, z, &height, &moisture, &density, regions);
+                regions[x*5 + z] = loadRegion(x, z);
             }
         }
+    }
+
+    Region* World::loadRegion(int x, int z){
+        Region *region;
+        std::string path("saves/");
+        path += std::to_string(x * REGION_SIZE) + std::string(":") + std::to_string(z * REGION_SIZE) + std::string(".txt");
+        FILE *file = fopen(path.c_str(), "r");
+        if(file != 0){
+            region = new Region(x, z, file, regions);
+            fclose(file);
+        }else{
+            region = new Region(x, z, height, moisture, density, regions);
+        }
+        return region;
     }
 
     World::~World(){

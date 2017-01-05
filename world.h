@@ -39,7 +39,9 @@ namespace VOX_World{
         bool needsUpdate;
         int xOffset, zOffset;
         Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, Region **regionsList);
+        Region(float xOffset, float zOffset, FILE *file, Region **regions);
         Region();
+        ~Region();
         Biome biome;
         void modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords = false);
         void setBlock(int x, int y, int z, int blockID);
@@ -54,6 +56,7 @@ namespace VOX_World{
     class World{
     private:
         Region **regions;
+        FastNoise *height, *moisture, *density;
     public:
         World(int seed = 0);
         ~World();
@@ -62,6 +65,7 @@ namespace VOX_World{
         unsigned short getBlock(float x, float y, float z, bool data = true);
         void setBlock(float x, float y, float z, unsigned short blockData);
         sf::Vector3f getCollision(sf::Vector3f start, sf::Vector3f end);
+        Region* loadRegion(int x, int z);
         void update();
         void render();
     };
