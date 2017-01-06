@@ -284,7 +284,7 @@ namespace VOX_World{
     }
 
     void World::update(){
-        for(unsigned int i = 0; i < NUM_REGIONS_LOADED; i ++){
+        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
             if(regions[i] != 0 && regions[i]->needsUpdate) regions[i]->update();
         }
     }
@@ -356,6 +356,54 @@ namespace VOX_World{
             if(blocks[getBlock(start.x, start.y, start.z, false)].solid == true) return start;
         }
         return end;
+    }
+
+    void World::pruneRegions(float x, float z){
+        Region **newRegions = new Region*[NUM_REGIONS_LOADED];
+        Region *regionCurrentlyIn = getRegion(x, 64, z);
+        if(regionCurrentlyIn == 0) return;
+        int xPrime, zPrime, index = 0;
+        for(int x = -REGIONS_FROM_PLAYER_LOAD; x <= REGIONS_FROM_PLAYER_LOAD; x ++){
+            for(int z = -REGIONS_FROM_PLAYER_LOAD; z <= REGIONS_FROM_PLAYER_LOAD; z ++){
+                Region *tempRegion = 0;
+                xPrime = (regionCurrentlyIn->xOffset / REGION_SIZE) + x;
+                zPrime = (regionCurrentlyIn->zOffset / REGION_SIZE) + z;
+
+                for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+                    if(regions[i] != 0 && (regions[i]->xOffset / REGION_SIZE) == xPrime
+                        && (regions[i]->zOffset / REGION_SIZE) == zPrime){
+                            tempRegion = regions[i];
+                        }
+                }
+                if(tempRegion == 0) tempRegion = loadRegion(xPrime, zPrime);
+                newRegions[index++] = tempRegion;
+                tempRegion = 0;
+            }
+        }
+
+        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+            if(regions[i] != 0){
+                if( (abs(regionCurrentlyIn->xOffset - regions[i]->xOffset) > REGIONS_FROM_PLAYER_LOAD) ||
+                    (abs(regionCurrentlyIn->zOffset - regions[i]->zOffset) > REGIONS_FROM_PLAYER_LOAD)){
+                        //delete regions[i];
+                        regions[i] = 0;
+                }
+            }
+        }
+
+        int j = 0, firstNullSpace = 0;
+        bool matchFound = false;
+        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+            matchFound = false;
+            for(j = 0; j < NUM_REGIONS_LOADED; j ++){
+                if(regions[j] == 0) firstNullSpace = j;
+                if(regions[j] == newRegions[i]){
+                    matchFound = true;
+                    break;
+                }
+            }
+            if(!matchFound) regions[firstNullSpace] = newRegions[i];
+        }
     }
 
     World::World(int seed){
@@ -521,6 +569,7 @@ namespace VOX_World{
         if(rX < 0) rX += 360;
         if(rY > 90) rY = 90;
         if(rY < -90) rY = -90;
+        if(tickCounter % 60 == 1) world->pruneRegions(x, z);
     }
 
     void Player::checkMovement(float *x, float *z){

@@ -69,7 +69,7 @@ int main(int argc, char **argv){
     VOX_Inventory::items = initItems();
     VOX_World::World *world = new VOX_World::World(1337);
 
-    VOX_World::Player player(world, 8.f, 90.f, 8.f);
+    VOX_World::Player player(world, 35.f, 90.f, 42.f);
 
     bool running = true;
     while (running){

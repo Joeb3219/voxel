@@ -9,7 +9,8 @@
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 16
 #define TYPICAL_GROUND 48
-#define NUM_REGIONS_LOADED 26
+#define REGIONS_FROM_PLAYER_LOAD 2
+#define NUM_REGIONS_LOADED 25
 
 namespace VOX_World{
 
@@ -66,6 +67,7 @@ namespace VOX_World{
         void setBlock(float x, float y, float z, unsigned short blockData);
         sf::Vector3f getCollision(sf::Vector3f start, sf::Vector3f end);
         Region* loadRegion(int x, int z);
+        void pruneRegions(float x, float z);
         void update();
         void render();
     };
