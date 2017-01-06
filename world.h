@@ -2,8 +2,6 @@
 #include <SFML/Window.hpp>
 #include <string>
 #include <vector>
-#include "fileIO.h"
-#include "inventory.h"
 #include "lib/fastNoise/FastNoise.h"
 
 #define WORLD_HEIGHT 128
@@ -11,6 +9,18 @@
 #define TYPICAL_GROUND 48
 #define REGIONS_FROM_PLAYER_LOAD 2
 #define NUM_REGIONS_LOADED 25
+
+namespace VOX_Mob{
+    class Player;
+}
+
+namespace VOX_FileIO{
+    class Tree;
+}
+
+namespace VOX_Inventory{
+    class Inventory;
+}
 
 namespace VOX_World{
 
@@ -70,36 +80,6 @@ namespace VOX_World{
         void pruneRegions(float x, float z);
         void update();
         void render();
-    };
-
-    class Mob{
-    private:
-        float x = 0, y = 0, z = 0;
-    public:
-        virtual sf::Vector3f getPosition() = 0;
-        virtual void update() = 0;
-        virtual void render() = 0;
-    };
-
-    class Player : public Mob{
-    private:
-        float x = 0, y = 0, z = 0, rX = 0, rY = 0, rZ = 0;
-        float yVelocity = 0;
-        int tickCounter = 0;
-        VOX_Inventory::Inventory *inventory = 0;
-        World *world = 0;
-        float moveSpeed = 0.05f;
-        void checkMovement(float *x, float *z);
-    public:
-        Player(World *world, float x, float y, float z);
-        ~Player();
-        sf::Vector3f getPosition();
-        sf::Vector3f getViewAngles();
-        void setMouseChange(sf::Vector2i change);
-        sf::Vector3f getLookingAt(bool adjacent = false);
-        void update();
-        void render();
-        void renderInventory(float width);
     };
 
 }

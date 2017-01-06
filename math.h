@@ -3,6 +3,8 @@
 
 #include <SFML/Window.hpp>
 
+#define PI 3.14159265
+
 namespace VOX_Math{
 
     sf::Vector3f normalizeVector(sf::Vector3f vector);

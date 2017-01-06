@@ -9,6 +9,7 @@
 #include "renderable.h"
 #include "fileIO.h"
 #include "world.h"
+#include "mob.h"
 #include "inventory.h"
 
 long int getCurrentTime(){
@@ -69,7 +70,7 @@ int main(int argc, char **argv){
     VOX_Inventory::items = initItems();
     VOX_World::World *world = new VOX_World::World(1337);
 
-    VOX_World::Player player(world, 35.f, 90.f, 42.f);
+    VOX_Mob::Player player(world, 35.f, 90.f, 42.f);
 
     bool running = true;
     while (running){
