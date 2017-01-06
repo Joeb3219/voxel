@@ -19,43 +19,6 @@ long int getCurrentTime(){
     return currentTime;
 }
 
-VOX_World::Block* initBlocks(){
-    VOX_World::Block* blocks = new VOX_World::Block[16];
-    VOX_FileIO::Tree blockData(fopen("res/blocks.txt", "r"));
-    VOX_FileIO::Tree_Node *blocksNode = blockData.fetchNode("blocks");
-    std::string blockLabel, blockID;
-    for(unsigned int i = 0; i < blocksNode->children.size(); i ++){
-        blockLabel = blocksNode->children.at(i)->label;
-        blockID = blockData.search("blocks:" + blockLabel + ":id");
-        if(blockID.empty()){
-            std::cout << "Malformed block data: " << blockLabel << std::endl;
-            continue;
-        }
-        blocks[atoi(blockID.c_str())] = VOX_World::Block(&blockData, "blocks:" + blockLabel);
-    }
-    return blocks;
-}
-
-VOX_Inventory::Item* initItems(){
-    VOX_Inventory::Item *items = new VOX_Inventory::Item[2048];
-    VOX_FileIO::Tree itemData(fopen("res/items.txt", "r"));
-    VOX_FileIO::Tree_Node *blocksNode = itemData.fetchNode("items");
-    std::string itemLabel, itemID;
-    int id, meta;
-    for(unsigned int i = 0; i < blocksNode->children.size(); i ++){
-        itemLabel = blocksNode->children.at(i)->label;
-        itemID = itemData.search("items:" + itemLabel + ":id");
-        if(itemID.empty()){
-            std::cout << "Malformed item data: " << itemLabel << std::endl;
-            continue;
-        }
-        id = atoi(itemID.substr(0, itemID.find_first_of(":")).c_str());
-        meta = atoi( itemID.substr(itemID.find_first_of(":") + 1, itemID.size()).c_str() );
-        items[id - ITEMS_BEGIN] = VOX_Inventory::Item(id, meta, &itemData, "items:" + itemLabel);
-    }
-    return items;
-}
-
 int main(int argc, char **argv){
     glutInit(&argc, argv);
     Camera *camera = new Camera(800, 600);
@@ -66,8 +29,8 @@ int main(int argc, char **argv){
     int frames = 0;
 
     VOX_Graphics::textureAtlas = VOX_FileIO::loadBitmapTexture("res/textures.bmp");
-    VOX_World::blocks = initBlocks();
-    VOX_Inventory::items = initItems();
+    VOX_World::blocks = VOX_FileIO::initBlocks();
+    VOX_Inventory::items = VOX_FileIO::initItems();
     VOX_World::World *world = new VOX_World::World(1337);
 
     VOX_Mob::Player *player = new VOX_Mob::Player(world, 35.f, 90.f, 42.f);

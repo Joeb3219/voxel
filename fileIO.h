@@ -10,6 +10,11 @@
 namespace VOX_World{
     class Region;
     class World;
+    class Block;
+}
+
+namespace VOX_Inventory{
+    class Item;
 }
 
 namespace VOX_FileIO{
@@ -18,6 +23,8 @@ namespace VOX_FileIO{
     std::string getToken(FILE *file, int mode = 0);
     std::string getLabelFromTag(std::string tag);
     VOX_World::Region* loadRegion(VOX_World::World *world, int x, int z);
+    VOX_Inventory::Item* initItems();
+    VOX_World::Block* initBlocks();
 
     class Tree_Node{
     public:
