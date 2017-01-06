@@ -8,6 +8,10 @@
 
 #define ITEMS_BEGIN 2048
 
+namespace VOX_World{
+    class Block;
+}
+
 namespace VOX_Inventory{
 
     enum BlockIds{AIR = 0, GRASS = 1, DIRT = 2, STONE = 3, SAND = 4, GRAVEL = 5, WOOD = 6, GOLD = 7,
@@ -18,6 +22,8 @@ namespace VOX_Inventory{
     int extractDataFromId(int id, bool metaData = false);
     bool isBlock(int id);
     int getMaxStack(int id);
+    bool isTool(int id);
+    int getItemWithDefaultMeta(int id);
 
     class Item{
     public:
@@ -38,6 +44,7 @@ namespace VOX_Inventory{
         int selectedSlot;
         Inventory(int numSlots);
         ~Inventory();
+        int getBreakSpeed(VOX_World::Block *block);
         bool setContents(int slot, int id, char num);
         unsigned int getSlot(int slot, bool quantity = true);
         unsigned int getSelectedSlot(bool quantity = true);

@@ -96,8 +96,15 @@ namespace VOX_Inventory{
     bool Inventory::setContents(int slot, int id, char num){
         if(slot > numSlots || slot < 0) return false;
         if(num == 0) contents[slot] = 0xFFFFFFFF;
+        else if(isTool(id) && (id & 0x00FFF000) == 0) contents[slot] = 0xFFFFFFFF;
         else contents[slot] = (num << 24) | (id);
         return true;
+    }
+
+    int Inventory::getBreakSpeed(VOX_World::Block *block){
+        int id = getSelectedSlot(false) & 0x00000FFF;
+        if(id == ItemIds::DIAMOND_PICKAXE) return 3;
+        return 1;
     }
 
     // Since the number of slots can't change, we make it private and allow getting but not setting.
@@ -120,6 +127,14 @@ namespace VOX_Inventory{
         return ((id & 0x00000FFF) < 2048); // We dedicate the first 2048 IDs to blocks, and the next 2048 IDs to items.
     }
 
+    bool isTool(int id){
+        id = id & 0x00000FFF;
+        switch(id){
+            case ItemIds::DIAMOND_PICKAXE: return true;
+            default: return false;
+        }
+    }
+
     int getDefaultMetaData(int id){
         if(!isBlock(id)) return items[id - ITEMS_BEGIN].meta;
         return 0;
@@ -130,6 +145,11 @@ namespace VOX_Inventory{
             case 2048: return 1;
             default: return 64;
         }
+    }
+
+    int getItemWithDefaultMeta(int id){
+        if(isBlock(id)) return id;
+        return ((items[id - ITEMS_BEGIN].meta) << 12) | id;
     }
 
 }

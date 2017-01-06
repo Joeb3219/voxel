@@ -1,3 +1,4 @@
+#include <iostream>
 #include "mob.h"
 #include "math.h"
 #include "world.h"
@@ -97,8 +98,12 @@ namespace VOX_Mob{
                     tickCounter = 0;
                     inventory->addItem(VOX_World::blocks[id].drops, 1);
                     world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::AIR);
+                    unsigned int hand = inventory->getSelectedSlot(false);
+                    if(VOX_Inventory::isTool(hand)){
+                        inventory->setContents(inventory->selectedSlot, ((hand & 0x00FFF000) - 0x00001000) | (hand & 0x00000FFF), 1);
+                    }
                 }else world->getRegion(lookingAt.x, lookingAt.y, lookingAt.z)->modifyMeta(
-                        (int) lookingAt.x, (int) lookingAt.y, (int) lookingAt.z, meta - 1);
+                        (int) lookingAt.x, (int) lookingAt.y, (int) lookingAt.z, meta - inventory->getBreakSpeed(&VOX_World::blocks[id]));
             }
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
@@ -180,7 +185,7 @@ namespace VOX_Mob{
         y += border;
 
         for(int i = 0; i < 9; i ++){
-            item = inventory->getSlot(i, false);
+            item = inventory->getSlot(i, false) & 0x00000FFF;
             quantity = inventory->getSlot(i, true) >> 24;
 
             if(i == inventory->selectedSlot) glColor3f(0.5f, 0.5f, 0.5f);
@@ -224,7 +229,7 @@ namespace VOX_Mob{
         this->z = z;
         this->world = world;
         this->inventory = new VOX_Inventory::Inventory(40);
-        inventory->setContents(0, 2048, 1);
+        inventory->setContents(0, VOX_Inventory::getItemWithDefaultMeta(2048), 1);
     }
 
 }
