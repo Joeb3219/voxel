@@ -24,6 +24,8 @@ namespace VOX_Inventory{
 
 namespace VOX_World{
 
+    class World;
+
     enum Biome{GRASSLAND};
 
     Biome getBiome(double elevation, double moisture);
@@ -44,13 +46,13 @@ namespace VOX_World{
     private:
         int DL_ID = 0;
         void buildDisplayList();
-        Region **regionList;
         void convertCoordinates(float *x, float *y, float *z);
+        World *world;
     public:
         bool needsUpdate;
         int xOffset, zOffset;
-        Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, Region **regionsList);
-        Region(float xOffset, float zOffset, FILE *file, Region **regions);
+        Region(World *world, float xOffset, float zOffset);
+        Region(World *world, float xOffset, float zOffset, FILE *file);
         Region();
         ~Region();
         Biome biome;
@@ -66,11 +68,13 @@ namespace VOX_World{
 
     class World{
     private:
-        Region **regions;
-        FastNoise *height, *moisture, *density;
+        VOX_Mob::Player *player;
     public:
+        FastNoise *height, *moisture, *density;
+        Region **regions;
         World(int seed = 0);
         ~World();
+        void setPlayer(VOX_Mob::Player *player);
         Region* getRegion(float x, float y, float z);
         Block getBlock(unsigned short identifier);
         unsigned short getBlock(float x, float y, float z, bool data = true);

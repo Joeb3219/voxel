@@ -14,8 +14,8 @@ namespace VOX_World{
 
     Region::Region(){}
 
-    Region::Region(float xOffset, float zOffset, FastNoise *height, FastNoise *moisture, FastNoise *density, Region **regions){
-        this->regionList = regions;
+    Region::Region(World *world, float xOffset, float zOffset){
+        this->world = world;
         this->needsUpdate = true;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
@@ -23,9 +23,9 @@ namespace VOX_World{
         double moistureAverage = 0.0, elevationAverage = 0.0;
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
-                heightMap[x*REGION_SIZE + z] = VOX_Math::convertScale(height->GetNoise(x + this->xOffset,z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
+                heightMap[x*REGION_SIZE + z] = VOX_Math::convertScale(world->height->GetNoise(x + this->xOffset,z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
                 elevationAverage += heightMap[x*REGION_SIZE + z];
-                moistureAverage += VOX_Math::convertScale(moisture->GetNoise(x + this->xOffset, z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
+                moistureAverage += VOX_Math::convertScale(world->moisture->GetNoise(x + this->xOffset, z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
             }
         }
 
@@ -38,7 +38,7 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    float currentDensity = VOX_Math::convertScale(density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
+                    float currentDensity = VOX_Math::convertScale(world->density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
                     if(y >= totalHeight || currentDensity <= 0.04f){
                         setBlock(x, y, z, VOX_Inventory::BlockIds::AIR);
                         continue;
@@ -91,8 +91,8 @@ namespace VOX_World{
 
     }
 
-    Region::Region(float xOffset, float zOffset, FILE *file, Region **regions){
-        this->regionList = regions;
+    Region::Region(World *world, float xOffset, float zOffset, FILE *file){
+        this->world = world;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
         unsigned short block;
@@ -203,11 +203,7 @@ namespace VOX_World{
         if(y <= 0 || y >= WORLD_HEIGHT - 1) return false;
         if((x >= 0 && x < REGION_SIZE - 1) && (z >= 0 && z < REGION_SIZE - 1)) return VOX_World::blocks[getBlock(x, y, z)].visible;
         else{
-            for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
-                if(regionList[i] != 0 && regionList[i]->isInRegion(xPrime, yPrime, zPrime)){
-                    return VOX_World::blocks[regionList[i]->getBlock(xPrime - regionList[i]->xOffset, y, zPrime - regionList[i]->zOffset)].visible;
-                }
-            }
+            return VOX_World::blocks[world->getBlock(xPrime, yPrime, zPrime, false)].visible;
         }
         return false;
     }
@@ -374,7 +370,7 @@ namespace VOX_World{
                             tempRegion = regions[i];
                         }
                 }
-                if(tempRegion == 0) tempRegion = loadRegion(xPrime, zPrime);
+                if(tempRegion == 0) tempRegion = VOX_FileIO::loadRegion(this, xPrime, zPrime);
                 newRegions[index++] = tempRegion;
                 tempRegion = 0;
             }
@@ -423,23 +419,13 @@ namespace VOX_World{
         for(int i = 0; i < NUM_REGIONS_LOADED; i ++) regions[i] = 0;
         for(int x = 0; x < 3; x ++){
             for(int z = 0; z < 3; z ++){
-                regions[x*5 + z] = loadRegion(x, z);
+                regions[x*5 + z] = VOX_FileIO::loadRegion(this, x, z);
             }
         }
     }
 
-    Region* World::loadRegion(int x, int z){
-        Region *region;
-        std::string path("saves/");
-        path += std::to_string(x * REGION_SIZE) + std::string(":") + std::to_string(z * REGION_SIZE) + std::string(".txt");
-        FILE *file = fopen(path.c_str(), "r");
-        if(file != 0){
-            region = new Region(x, z, file, regions);
-            fclose(file);
-        }else{
-            region = new Region(x, z, height, moisture, density, regions);
-        }
-        return region;
+    void World::setPlayer(VOX_Mob::Player *player){
+        this->player = player;
     }
 
     World::~World(){

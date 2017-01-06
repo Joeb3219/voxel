@@ -5,8 +5,23 @@
 #include <cstdlib>
 #include <cmath>
 #include "fileIO.h"
+#include "world.h"
 
 namespace VOX_FileIO{
+
+    VOX_World::Region* loadRegion(VOX_World::World *world, int x, int z){
+        VOX_World::Region *region;
+        std::string path("saves/");
+        path += std::to_string(x * REGION_SIZE) + std::string(":") + std::to_string(z * REGION_SIZE) + std::string(".txt");
+        FILE *file = fopen(path.c_str(), "r");
+        if(file != 0){
+            region = new VOX_World::Region(world, x, z, file);
+            fclose(file);
+        }else{
+            region = new VOX_World::Region(world, x, z);
+        }
+        return region;
+    }
 
     Tree_Node* Tree_Node::getChild(std::string label){
         Tree_Node *child;

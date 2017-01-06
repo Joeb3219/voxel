@@ -7,11 +7,17 @@
 #include <cstdlib>
 #include <string>
 
+namespace VOX_World{
+    class Region;
+    class World;
+}
+
 namespace VOX_FileIO{
 
     GLuint loadBitmapTexture(const char *fileName);
     std::string getToken(FILE *file, int mode = 0);
     std::string getLabelFromTag(std::string tag);
+    VOX_World::Region* loadRegion(VOX_World::World *world, int x, int z);
 
     class Tree_Node{
     public:

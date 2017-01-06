@@ -4,6 +4,7 @@
 #include <cmath>
 #include <GL/glut.h>
 #include "camera.h"
+#include "mob.h"
 #include "renderable.h"
 
 #define PI 3.14159265
@@ -21,7 +22,12 @@ Camera::Camera(int width, int height){
     sf::Mouse::setPosition(sf::Vector2i(width / 2, height / 2), *screen);
 }
 
-void Camera::update(sf::Vector3f cameraPos, sf::Vector3f angle){
+void Camera::setFollowing(VOX_Mob::Player *player){
+    this->following = player;
+}
+
+void Camera::update(){
+    sf::Vector3f cameraPos = following->getPosition(), angle = following->getViewAngles();
     this->x = cameraPos.x;
     this->y = cameraPos.y;
     this->z = cameraPos.z;

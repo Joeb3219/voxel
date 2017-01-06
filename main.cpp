@@ -70,7 +70,9 @@ int main(int argc, char **argv){
     VOX_Inventory::items = initItems();
     VOX_World::World *world = new VOX_World::World(1337);
 
-    VOX_Mob::Player player(world, 35.f, 90.f, 42.f);
+    VOX_Mob::Player *player = new VOX_Mob::Player(world, 35.f, 90.f, 42.f);
+    world->setPlayer(player);
+    camera->setFollowing(player);
 
     bool running = true;
     while (running){
@@ -84,24 +86,24 @@ int main(int argc, char **argv){
         camera->pre2DRender();
 
         VOX_Graphics::renderString(8, camera->height - 13, std::string("FPS: ") + std::to_string(fps));
-        sf::Vector3f playerPos = player.getPosition();
+        sf::Vector3f playerPos = player->getPosition();
         VOX_Graphics::renderString(8, camera->height - 26, std::string("[x,y,z]: ") + std::to_string(playerPos.x)
                 + ", " + std::to_string(playerPos.y) + ", " + std::to_string(playerPos.z));
-        sf::Vector3f lookingAt = player.getLookingAt();
+        sf::Vector3f lookingAt = player->getLookingAt();
         VOX_Graphics::renderString(8, camera->height - 39, std::string("Looking at: ") +
                 VOX_World::blocks[world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false)].name + ": " + std::to_string(lookingAt.x)
                 + ", " + std::to_string(lookingAt.y) + ", " + std::to_string(lookingAt.z));
 
-        player.renderInventory(camera->width);
+        player->renderInventory(camera->width);
 
         // Cleanup
         camera->postRender();
         frames ++;
         while((currentTime + msPerTick) < getCurrentTime()){
             if(!camera->focused) continue;
-            player.setMouseChange(camera->getRelativeMousePosition());
-            player.update();
-            camera->update(player.getPosition(), player.getViewAngles());
+            player->setMouseChange(camera->getRelativeMousePosition());
+            player->update();
+            camera->update();
             currentTime += msPerTick;
             world->update();
         }
