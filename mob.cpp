@@ -48,12 +48,13 @@ namespace VOX_Mob{
 
         checkMovement(&newX, &newZ);
 
-        int numSteps = 4;
+        int numSteps = 8;
         sf::Vector3f curr = sf::Vector3f(x, y, z), goal(newX, y, newZ), stepVector;
         stepVector = (curr - goal) * (1.0f / numSteps);
         for(int i = 0; i < numSteps; i ++){
             curr -= stepVector;
-            if(VOX_World::blocks[world->getBlock(curr.x, curr.y + 1, curr.z, false)].solid == true){
+            if(VOX_World::blocks[world->getBlock(curr.x, curr.y + 1, curr.z, false)].solid == true ||
+                VOX_World::blocks[world->getBlock(curr.x, curr.y + 2, curr.z, false)].solid){
                 curr += stepVector;
                 break;
             }
@@ -79,7 +80,7 @@ namespace VOX_Mob{
                 y = j;
                 if(VOX_World::blocks[world->getBlock(x, j + 2.5f, z, false)].solid == true){
                     yVelocity = 0;
-                    y = (float) ((int) j + 2.5f);
+                    y = (float) ((int) j);
                     break;
                 }
             }

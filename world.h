@@ -69,9 +69,9 @@ namespace VOX_World{
     class World{
     private:
         VOX_Mob::Player *player;
+        Region **regions;
     public:
         FastNoise *height, *moisture, *density;
-        Region **regions;
         World(int seed = 0);
         ~World();
         void setPlayer(VOX_Mob::Player *player);
