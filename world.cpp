@@ -211,8 +211,12 @@ namespace VOX_World{
         float yPrime = y;
         float zPrime = z + this->zOffset;
         if(y <= 0 || y >= WORLD_HEIGHT - 1) return false;
-        if((x >= 0 && x < REGION_SIZE - 1) && (z >= 0 && z < REGION_SIZE - 1)) return VOX_World::blocks[getBlock(x, y, z)].visible;
+        if((x >= 0 && x < REGION_SIZE - 1) && (z >= 0 && z < REGION_SIZE - 1)){
+            return VOX_World::blocks[getBlock(x, y, z)].visible;
+        }
         else{
+            if(xOffset == -16 && x == REGION_SIZE - 1) xPrime += 0.125;
+            if(zOffset == -16 && z == REGION_SIZE - 1) zPrime += 0.125;
             return VOX_World::blocks[world->getBlock(xPrime, yPrime, zPrime, false)].visible;
         }
         return false;
