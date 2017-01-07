@@ -102,8 +102,13 @@ namespace VOX_Mob{
                     if(VOX_Inventory::isTool(hand)){
                         inventory->setContents(inventory->selectedSlot, ((hand & 0x00FFF000) - 0x00001000) | (hand & 0x00000FFF), 1);
                     }
-                }else world->getRegion(lookingAt.x, lookingAt.y, lookingAt.z)->modifyMeta(
-                        (int) lookingAt.x, (int) lookingAt.y, (int) lookingAt.z, meta - inventory->getBreakSpeed(&VOX_World::blocks[id]));
+                }else{
+                    int blockDamage = inventory->getBreakSpeed(&VOX_World::blocks[id]);
+                    if(meta < blockDamage) meta = 0;
+                    else meta -= blockDamage;
+                    world->getRegion(lookingAt.x, lookingAt.y, lookingAt.z)->modifyMeta(
+                        (int) lookingAt.x, (int) lookingAt.y, (int) lookingAt.z, meta);
+                    }
             }
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
@@ -131,7 +136,7 @@ namespace VOX_Mob{
         if(rX < 0) rX += 360;
         if(rY > 90) rY = 90;
         if(rY < -90) rY = -90;
-        if(tickCounter % 60 == 1) world->pruneRegions(x, z);
+        if(tickCounter % 60 == 1) world->pruneRegions();
     }
 
     void Player::checkMovement(float *x, float *z){

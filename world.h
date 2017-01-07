@@ -81,7 +81,7 @@ namespace VOX_World{
         void setBlock(float x, float y, float z, unsigned short blockData);
         sf::Vector3f getCollision(sf::Vector3f start, sf::Vector3f end);
         Region* loadRegion(int x, int z);
-        void pruneRegions(float x, float z);
+        void pruneRegions();
         void update();
         void render();
     };

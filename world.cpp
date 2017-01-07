@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "world.h"
+#include "mob.h"
 #include "math.h"
 #include "fileIO.h"
 #include "lib/fastNoise/FastNoise.h"
@@ -352,10 +353,11 @@ namespace VOX_World{
         return end;
     }
 
-    void World::pruneRegions(float x, float z){
+    void World::pruneRegions(){
         if(1 == 1) return;
+        sf::Vector3f playerPos = player->getPosition();
         Region **newRegions = new Region*[NUM_REGIONS_LOADED];
-        Region *regionCurrentlyIn = getRegion(x, 64, z);
+        Region *regionCurrentlyIn = getRegion(playerPos.x, 64, playerPos.z);
         if(regionCurrentlyIn == 0) return;
         int xPrime, zPrime, index = 0;
         for(int x = -REGIONS_FROM_PLAYER_LOAD; x <= REGIONS_FROM_PLAYER_LOAD; x ++){
