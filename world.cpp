@@ -142,8 +142,8 @@ namespace VOX_World{
         if(y > WORLD_HEIGHT) return false;
         int xPrime = abs(x);
         int zPrime = abs(z);
-        int xRegion = (((xPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
-        int zRegion = (((zPrime + REGION_SIZE) / REGION_SIZE * REGION_SIZE) - REGION_SIZE);
+        int xRegion = ((int)(((xPrime + REGION_SIZE) / REGION_SIZE) * REGION_SIZE) - REGION_SIZE);
+        int zRegion = ((int)(((zPrime + REGION_SIZE) / REGION_SIZE) * REGION_SIZE) - REGION_SIZE);
         if(x < 0) xRegion = -xRegion - REGION_SIZE;
         if(z < 0) zRegion = -zRegion - REGION_SIZE;
         if(xRegion == this->xOffset && zRegion == this->zOffset) return true;
@@ -161,14 +161,12 @@ namespace VOX_World{
     }
 
     void Region::convertCoordinates(float *x, float *y, float *z){
-        std::cout << "Converting coordinates " << *x << ", " << *y << ", " << *z << std::endl;
         int xPrime = abs(*x);
         int zPrime = abs(*z);
         if( (*x) < 0) (*x) = REGION_SIZE - (REGION_SIZE + xPrime - abs(this->xOffset)) - 1;
         else (*x) = (xPrime - abs(this->xOffset));
         if( (*z) < 0) (*z) = REGION_SIZE - (REGION_SIZE + zPrime - abs(this->zOffset)) - 1;
         else (*z) = (zPrime - abs(this->zOffset));
-        std::cout << "coordinates are now" << *x << ", " << *y << ", " << *z << std::endl;
     }
 
     void Region::modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords){

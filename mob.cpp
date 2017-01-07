@@ -102,7 +102,7 @@ namespace VOX_Mob{
                     if(meta < blockDamage) meta = 0;
                     else meta -= blockDamage;
                     world->getRegion(lookingAt.x, lookingAt.y, lookingAt.z)->modifyMeta(
-                        (int) lookingAt.x, (int) lookingAt.y, (int) lookingAt.z, meta);
+                        lookingAt.x, lookingAt.y, lookingAt.z, meta);
                     }
             }
         }
