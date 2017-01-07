@@ -46,7 +46,6 @@ namespace VOX_World{
     private:
         int DL_ID = 0;
         void buildDisplayList();
-        void convertCoordinates(float *x, float *y, float *z);
         World *world;
     public:
         bool needsUpdate;
@@ -56,9 +55,10 @@ namespace VOX_World{
         Region();
         ~Region();
         Biome biome;
+        void convertCoordinates(float *x, float *y, float *z);
         void modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords = false);
         void setBlock(int x, int y, int z, int blockID);
-        unsigned short getBlock(int x, int y, int z);
+        unsigned short getBlock(int x, int y, int z, bool data = false);
         unsigned short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         bool isInRegion(float x, float y, float z);
         bool checkSurroundingsIsVisible(int x, int y, int z);

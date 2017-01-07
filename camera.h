@@ -5,6 +5,10 @@
 #include "renderable.h"
 #define DEBUG 0
 
+#define NEARCLIP 0.0001
+#define FARCLIP 400.0
+#define FOV 60
+
 namespace VOX_Mob{
     class Player;
 }

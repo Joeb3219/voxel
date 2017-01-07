@@ -12,6 +12,7 @@ namespace VOX_Math{
     float convertScale(float x, float oldMin, float oldMax, float newMin, float newMax);
     void calculateFalling(float *yPosition, float *yVelocity, int ticksPassed);
     float norm(sf::Vector3f vec);
+    sf::Vector3f computeVectorFromPos(sf::Vector3f origin, float rX, float rY, float dist);
 
 }
 

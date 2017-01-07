@@ -5,12 +5,8 @@
 #include <GL/glut.h>
 #include "camera.h"
 #include "mob.h"
+#include "math.h"
 #include "renderable.h"
-
-#define PI 3.14159265
-#define NEARCLIP 0.001
-#define FARCLIP 400.0
-#define FOV 70
 
 Camera::Camera(int width, int height){
     this->width = width;

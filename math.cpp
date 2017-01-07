@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SFML/Window.hpp>
 #include <cmath>
+#include "math.h"
 
 #define GRAVITY_PER_TICK -0.11f/30
 
@@ -17,6 +18,16 @@ namespace VOX_Math{
                 v1.z*v2.x - v1.x*v2.z,
                 v1.x*v2.y - v1.y*v2.x
         );
+    }
+
+    sf::Vector3f computeVectorFromPos(sf::Vector3f origin, float rX, float rY, float dist){
+        sf::Vector3f lookingAt;
+        float rYRadians = (PI / 180.0) * rY;
+        float rXRadians = (PI / 180.0) * (rX + 90);
+        lookingAt.x = origin.x - ((float) cos(rXRadians) * dist * fabs(cos(rYRadians)));
+        lookingAt.y = (origin.y) - ((float) sin(rYRadians) * dist);
+        lookingAt.z = origin.z - ((float) sin(rXRadians) * dist * fabs(cos(rYRadians)));
+        return lookingAt;
     }
 
     float convertScale(float x, float oldMin, float oldMax, float newMin, float newMax){

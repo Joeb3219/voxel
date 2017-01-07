@@ -8,6 +8,7 @@
 #include "lib/fastNoise/FastNoise.h"
 #include "renderable.h"
 #include "inventory.h"
+#include "camera.h"
 
 namespace VOX_World{
 
@@ -39,6 +40,11 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
+                    /*if(xOffset < 0 || zOffset < 0){
+                        if(x == 0 && z == 0) setBlock(x, y, z, VOX_Inventory::BlockIds::DIAMOND);
+                        else setBlock(x, y, z, VOX_Inventory::BlockIds::AIR);
+                        continue;
+                    }*/
                     float currentDensity = VOX_Math::convertScale(world->density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
                     if(y >= totalHeight || currentDensity <= 0.04f){
                         setBlock(x, y, z, VOX_Inventory::BlockIds::AIR);
@@ -144,8 +150,9 @@ namespace VOX_World{
         return false;
     }
 
-    unsigned short Region::getBlock(int x, int y, int z){
-        return blocks[y][x*REGION_SIZE + z] & 0x00FF;
+    unsigned short Region::getBlock(int x, int y, int z, bool data){
+        if(!data) return blocks[y][x*REGION_SIZE + z] & 0x00FF;
+        return blocks[y][x*REGION_SIZE + z];
     }
 
     void Region::setBlock(int x, int y, int z, int blockID){
@@ -154,10 +161,14 @@ namespace VOX_World{
     }
 
     void Region::convertCoordinates(float *x, float *y, float *z){
+        std::cout << "Converting coordinates " << *x << ", " << *y << ", " << *z << std::endl;
         int xPrime = abs(*x);
         int zPrime = abs(*z);
-        (*x) = xPrime - this->xOffset;
-        (*z) = zPrime - this->zOffset;
+        if( (*x) < 0) (*x) = REGION_SIZE - (REGION_SIZE + xPrime - abs(this->xOffset)) - 1;
+        else (*x) = (xPrime - abs(this->xOffset));
+        if( (*z) < 0) (*z) = REGION_SIZE - (REGION_SIZE + zPrime - abs(this->zOffset)) - 1;
+        else (*z) = (zPrime - abs(this->zOffset));
+        std::cout << "coordinates are now" << *x << ", " << *y << ", " << *z << std::endl;
     }
 
     void Region::modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords){
@@ -285,7 +296,13 @@ namespace VOX_World{
     }
 
     void World::render(){
+        // Frustum culling: Determine which regions are within frustum.
+        //sf::Vector3f currentPos = player->getPosition(), lookingAtLeft, lookingAtRight, angle = player->getViewAngles();
+        //currentPos.y += 2.5f;
+        //lookingAtLeft = VOX_Math::computeVectorFromPos(currentPos, angle.x - FOV / 2, angle.y - FOV / 2, 1.0f);
+        //lookingAtRight = VOX_Math::computeVectorFromPos(currentPos, angle.x + FOV / 2, angle.y + FOV / 2, 1.0f);
         for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+
             if(regions[i] != 0) regions[i]->render();
         }
     }
@@ -308,10 +325,12 @@ namespace VOX_World{
         if(yPrime >= WORLD_HEIGHT || yPrime < 0) return VOX_Inventory::BlockIds::AIR;
         Region *r = getRegion(x, y, z);
         if(r != 0){
-            xPrime -= (r->xOffset);
-            zPrime -= (r->zOffset);
-            if(data) return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime];
-            return r->blocks[yPrime][xPrime * REGION_SIZE + zPrime] & 0x00FF;
+            xPrime = abs(xPrime) - abs(r->xOffset);
+            zPrime = abs(zPrime) - abs(r->zOffset);
+            if(x < 0) xPrime = REGION_SIZE - (REGION_SIZE + xPrime) - 1;
+            if(z < 0) zPrime = REGION_SIZE - (REGION_SIZE + zPrime) - 1;
+            if(data) return r->blocks[yPrime][xPrime*REGION_SIZE + zPrime];
+            return r->blocks[yPrime][xPrime*REGION_SIZE + zPrime] & 0x00FF;
         }
         return VOX_Inventory::BlockIds::AIR;
     }
@@ -323,8 +342,10 @@ namespace VOX_World{
         if(yPrime >= WORLD_HEIGHT || y < 0) return;
         Region *r = getRegion(x, y, z);
         if(r != 0){
-            xPrime -= (r->xOffset);
-            zPrime -= (r->zOffset);
+            xPrime = abs(xPrime) - abs(r->xOffset);
+            zPrime = abs(zPrime) - abs(r->zOffset);
+            if(x < 0) xPrime = REGION_SIZE - (REGION_SIZE + xPrime) - 1;
+            if(z < 0) zPrime = REGION_SIZE - (REGION_SIZE + zPrime) - 1;
             r->setBlock(xPrime, yPrime, zPrime, blockData & 0x00FF);
             r->needsUpdate = true;
             if(xPrime == 0){
@@ -421,7 +442,7 @@ namespace VOX_World{
         for(int i = 0; i < NUM_REGIONS_LOADED; i ++) regions[i] = 0;
         for(int x = 0; x < 3; x ++){
             for(int z = 0; z < 3; z ++){
-                regions[x*5 + z] = VOX_FileIO::loadRegion(this, x, z);
+                regions[x*5 + z] = VOX_FileIO::loadRegion(this, x - 1, z - 1);
             }
         }
     }

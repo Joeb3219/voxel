@@ -24,12 +24,7 @@ namespace VOX_Mob{
         int steps = 16; // Moves roughly 1/4 of a block at a time.
         sf::Vector3f currentPos = getPosition();
         currentPos.y += 2.5f;
-        sf::Vector3f lookingAt;
-        float rYRadians = (PI / 180.0) * rY;
-        float rXRadians = (PI / 180.0) * (rX + 90);
-        lookingAt.x = x - ((float) cos(rXRadians) * 4.f * fabs(cos(rYRadians)));
-        lookingAt.y = (y + 2.5f) - ((float) sin(rYRadians) * 4.f);
-        lookingAt.z = z - ((float) sin(rXRadians) * 4.f * fabs(cos(rYRadians)));
+        sf::Vector3f lookingAt = VOX_Math::computeVectorFromPos(currentPos, rX, rY, 4.0f);
         sf::Vector3f stepVector = (currentPos - lookingAt) * (1.0f / steps);
         // Now we hone into the vector to find a collision.
         for(int i = 0; i < steps; i ++){

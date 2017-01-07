@@ -33,7 +33,7 @@ int main(int argc, char **argv){
     VOX_Inventory::items = VOX_FileIO::initItems();
     VOX_World::World *world = new VOX_World::World(1337);
 
-    VOX_Mob::Player *player = new VOX_Mob::Player(world, 35.f, 90.f, 42.f);
+    VOX_Mob::Player *player = new VOX_Mob::Player(world, 2.0f, 90.f, 2.0f);
     world->setPlayer(player);
     camera->setFollowing(player);
 
