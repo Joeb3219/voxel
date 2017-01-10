@@ -90,7 +90,6 @@ namespace VOX_Mob{
             meta = (blockLookingAt & 0xFF00) >> 8;
             if(id != 0 && meta != 0xFF){
                 if(meta == 0){
-                    std::cout << "HELLO" << std::endl;
                     tickCounter = 0;
                     inventory->addItem(VOX_World::blocks[id].drops, 1);
                     world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::AIR);
@@ -99,7 +98,6 @@ namespace VOX_Mob{
                         inventory->setContents(inventory->selectedSlot, ((hand & 0x00FFF000) - 0x00001000) | (hand & 0x00000FFF), 1);
                     }
                 }else{
-                    std::cout << "22HELLO" << std::endl;
                     int blockDamage = inventory->getBreakSpeed(&VOX_World::blocks[id]);
                     if(meta < blockDamage) meta = 0;
                     else meta -= blockDamage;
