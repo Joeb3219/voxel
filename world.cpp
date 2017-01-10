@@ -40,11 +40,6 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    /*if(xOffset < 0 || zOffset < 0){
-                        if(x == 0 && z == 0) setBlock(x, y, z, VOX_Inventory::BlockIds::DIAMOND);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::AIR);
-                        continue;
-                    }*/
                     float currentDensity = VOX_Math::convertScale(world->density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
                     if(y >= totalHeight || currentDensity <= 0.04f){
                         setBlock(x, y, z, VOX_Inventory::BlockIds::AIR);
@@ -160,13 +155,20 @@ namespace VOX_World{
         blocks[y][x*REGION_SIZE + z] = (((meta & 0x00FF) << 8) | (blockID & 0x00FF));
     }
 
-    void Region::convertCoordinates(float *x, float *y, float *z){
-        int xPrime = abs(*x);
-        int zPrime = abs(*z);
-        if( (*x) < 0) (*x) = REGION_SIZE - (REGION_SIZE + xPrime - abs(this->xOffset)) - 1;
-        else (*x) = (xPrime - abs(this->xOffset));
-        if( (*z) < 0) (*z) = REGION_SIZE - (REGION_SIZE + zPrime - abs(this->zOffset)) - 1;
-        else (*z) = (zPrime - abs(this->zOffset));
+    void Region::convertCoordinates(float *x, float *y, float *z, bool toWorld){
+        if(toWorld){
+            if(zOffset < 0) (*z) += (1 - REGION_SIZE - (this->zOffset) - REGION_SIZE) - 1;
+            else (*z) = abs(*z) + this->zOffset;
+            if(xOffset < 0) (*x) += (1 - REGION_SIZE - (this->xOffset) - REGION_SIZE) - 1;
+            else (*x) = abs(*x) + this->xOffset;
+        }else{
+            int xPrime = abs(*x);
+            int zPrime = abs(*z);
+            if( (*x) < 0) (*x) = REGION_SIZE - (REGION_SIZE + xPrime - abs(this->xOffset)) - 1;
+            else (*x) = (xPrime - abs(this->xOffset));
+            if( (*z) < 0) (*z) = REGION_SIZE - (REGION_SIZE + zPrime - abs(this->zOffset)) - 1;
+            else (*z) = (zPrime - abs(this->zOffset));
+        }
     }
 
     void Region::modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords){
@@ -185,19 +187,20 @@ namespace VOX_World{
         for(int i = 0; i < 256; i ++){
             if(&VOX_World::blocks[i] == 0 || !VOX_World::blocks[i].visible) continue;   // A null pointer or invisible
             texCoords = &VOX_World::blocks[i].texCoords[0];
-            for(int x = 0; x < REGION_SIZE; x ++){
-                for(int z = 0; z < REGION_SIZE; z ++){
-                    for(int y = 0; y < WORLD_HEIGHT; y ++){
-                        xPrime = x + xOffset;
+            for(float x = 0; x < REGION_SIZE; x ++){
+                for(float z = 0; z < REGION_SIZE; z ++){
+                    for(float y = 0; y < WORLD_HEIGHT; y ++){
+                        xPrime = x;
                         yPrime = y;
-                        zPrime = z + zOffset;
+                        zPrime = z;
                         if((getBlock(x, y, z)) != i) continue;
-                        if(!checkSurroundingsIsVisible(x, y + 1, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords);
-                        if(!checkSurroundingsIsVisible(x, y - 1, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords);
-                        if(!checkSurroundingsIsVisible(x + 1, y, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords);
-                        if(!checkSurroundingsIsVisible(x - 1, y, z)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords);
-                        if(!checkSurroundingsIsVisible(x, y, z + 1)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords);
-                        if(!checkSurroundingsIsVisible(x, y, z - 1)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords);
+                        convertCoordinates(&xPrime, &yPrime, &zPrime, true);
+                        if(!checkSurroundingsIsVisible(xPrime, yPrime + 1, zPrime)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords);
+                        if(!checkSurroundingsIsVisible(xPrime, yPrime - 1, zPrime)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords);
+                        if(!checkSurroundingsIsVisible(xPrime + 1, yPrime, zPrime)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords);
+                        if(!checkSurroundingsIsVisible(xPrime - 1, yPrime, zPrime)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords);
+                        if(!checkSurroundingsIsVisible(xPrime, yPrime, zPrime + 1)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords);
+                        if(!checkSurroundingsIsVisible(xPrime, yPrime, zPrime - 1)) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords);
                     }
                 }
             }
@@ -206,18 +209,18 @@ namespace VOX_World{
         glEndList();
     }
 
-    bool Region::checkSurroundingsIsVisible(int x, int y, int z){
-        float xPrime = x + this->xOffset;
-        float yPrime = y;
-        float zPrime = z + this->zOffset;
+    bool Region::checkSurroundingsIsVisible(float x, float y, float z){
         if(y <= 0 || y >= WORLD_HEIGHT - 1) return false;
-        if((x >= 0 && x < REGION_SIZE - 1) && (z >= 0 && z < REGION_SIZE - 1)){
+        if(xOffset < 0) x ++;
+        if(zOffset < 0) z ++;
+        if(isInRegion(x, y, z)){
+            convertCoordinates(&x, &y, &z);
             return VOX_World::blocks[getBlock(x, y, z)].visible;
         }
         else{
-            if(xOffset == -16 && x == REGION_SIZE - 1) xPrime += 0.125;
-            if(zOffset == -16 && z == REGION_SIZE - 1) zPrime += 0.125;
-            return VOX_World::blocks[world->getBlock(xPrime, yPrime, zPrime, false)].visible;
+//            if(xOffset == -16 && x == REGION_SIZE - 1) x += 0.125;
+//            if(zOffset == -16 && z == REGION_SIZE - 1) z += 0.125;
+            return VOX_World::blocks[world->getBlock(x, y, z, false)].visible;
         }
         return false;
     }
