@@ -2,13 +2,14 @@
 #include <SFML/Window.hpp>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "lib/fastNoise/FastNoise.h"
 
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 16
 #define TYPICAL_GROUND 48
-#define REGIONS_FROM_PLAYER_LOAD 2
-#define NUM_REGIONS_LOADED 25
+#define REGIONS_FROM_PLAYER_LOAD 3
+#define REGIONS_FROM_PLAYER_RENDER 2
 
 namespace VOX_Mob{
     class Player;
@@ -69,7 +70,7 @@ namespace VOX_World{
     class World{
     private:
         VOX_Mob::Player *player;
-        Region **regions;
+        std::unordered_map<std::string, Region*> regionMap;
     public:
         FastNoise *height, *moisture, *density;
         World(int seed = 0);

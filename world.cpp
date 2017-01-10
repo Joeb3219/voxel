@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "world.h"
 #include "mob.h"
 #include "math.h"
@@ -286,26 +287,32 @@ namespace VOX_World{
     }
 
     void World::update(){
-        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
-            if(regions[i] != 0 && regions[i]->needsUpdate) regions[i]->update();
+        for(auto &p : regionMap){
+            Region *r = p.second;
+            if(r != 0 && r->needsUpdate) r->update();
         }
     }
 
     void World::render(){
-        // Frustum culling: Determine which regions are within frustum.
-        //sf::Vector3f currentPos = player->getPosition(), lookingAtLeft, lookingAtRight, angle = player->getViewAngles();
-        //currentPos.y += 2.5f;
-        //lookingAtLeft = VOX_Math::computeVectorFromPos(currentPos, angle.x - FOV / 2, angle.y - FOV / 2, 1.0f);
-        //lookingAtRight = VOX_Math::computeVectorFromPos(currentPos, angle.x + FOV / 2, angle.y + FOV / 2, 1.0f);
-        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
+        sf::Vector3f currentPos = player->getPosition();
+        // TODO: FRUSTUM CULLING
+        Region *currentlyIn = getRegion(currentPos.x, currentPos.y, currentPos.z);
+        if(currentlyIn == 0) return; // In a non-existent region.
 
-            if(regions[i] != 0) regions[i]->render();
+        std::string label;
+        for(auto& p: regionMap){
+            Region *r = p.second;
+            if( abs( (r->xOffset - currentlyIn->xOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER &&
+                abs( (r->zOffset - currentlyIn->zOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER){
+                    r->render();
+            }
         }
     }
 
     Region* World::getRegion(float x, float y, float z){
-        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
-            if(regions[i] != 0 && regions[i]->isInRegion(x, y, z)) return regions[i];
+        for(auto &p : regionMap){
+            Region *r = p.second;
+            if(r != 0 && r->isInRegion(x, y, z)) return r;
         }
         return 0;
     }
@@ -359,57 +366,26 @@ namespace VOX_World{
     }
 
     void World::pruneRegions(){
-        if(1 == 1) return;
-        sf::Vector3f playerPos = player->getPosition();
-        Region **newRegions = new Region*[NUM_REGIONS_LOADED];
-        Region *regionCurrentlyIn = getRegion(playerPos.x, 64, playerPos.z);
-        if(regionCurrentlyIn == 0) return;
-        int xPrime, zPrime, index = 0;
+        sf::Vector3f currentPos = player->getPosition();
+        Region *currentlyIn = getRegion(currentPos.x, currentPos.y, currentPos.z);
+        if(currentlyIn == 0) return; // In a non-existent region.
+
+        std::string label;
+        int rX, rZ;
         for(int x = -REGIONS_FROM_PLAYER_LOAD; x <= REGIONS_FROM_PLAYER_LOAD; x ++){
             for(int z = -REGIONS_FROM_PLAYER_LOAD; z <= REGIONS_FROM_PLAYER_LOAD; z ++){
-                Region *tempRegion = 0;
-                xPrime = (regionCurrentlyIn->xOffset / REGION_SIZE) + x;
-                zPrime = (regionCurrentlyIn->zOffset / REGION_SIZE) + z;
-
-                for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
-                    if(regions[i] != 0 && (regions[i]->xOffset / REGION_SIZE) == xPrime
-                        && (regions[i]->zOffset / REGION_SIZE) == zPrime){
-                            tempRegion = regions[i];
-                        }
-                }
-                if(tempRegion == 0) tempRegion = VOX_FileIO::loadRegion(this, xPrime, zPrime);
-                newRegions[index++] = tempRegion;
-                tempRegion = 0;
-            }
-        }
-
-        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
-            if(regions[i] != 0){
-                if( (abs(regionCurrentlyIn->xOffset - regions[i]->xOffset) > REGIONS_FROM_PLAYER_LOAD) ||
-                    (abs(regionCurrentlyIn->zOffset - regions[i]->zOffset) > REGIONS_FROM_PLAYER_LOAD)){
-                        //delete regions[i];
-                        regions[i] = 0;
+                rX = x + (currentlyIn->xOffset / REGION_SIZE);
+                rZ = z + (currentlyIn->zOffset / REGION_SIZE);
+                label = std::to_string(rX) + std::string(":") + std::to_string(rZ);
+                auto p = regionMap.find(label);
+                if(p == regionMap.end()){
+                    regionMap.insert({label, VOX_FileIO::loadRegion(this, rX, rZ)});
                 }
             }
-        }
-
-        int j = 0, firstNullSpace = 0;
-        bool matchFound = false;
-        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
-            matchFound = false;
-            for(j = 0; j < NUM_REGIONS_LOADED; j ++){
-                if(regions[j] == 0) firstNullSpace = j;
-                if(regions[j] == newRegions[i]){
-                    matchFound = true;
-                    break;
-                }
-            }
-            if(!matchFound) regions[firstNullSpace] = newRegions[i];
         }
     }
 
     World::World(int seed){
-        regions = new Region*[NUM_REGIONS_LOADED];
         height = new FastNoise();
         height->SetNoiseType(FastNoise::SimplexFractal);
         height->SetSeed(seed);
@@ -423,10 +399,10 @@ namespace VOX_World{
         density->SetSeed(seed / 3);
         density->SetFrequency(0.5f);
         density->SetFractalOctaves(4);
-        for(int i = 0; i < NUM_REGIONS_LOADED; i ++) regions[i] = 0;
         for(int x = 0; x < 3; x ++){
             for(int z = 0; z < 3; z ++){
-                regions[x*5 + z] = VOX_FileIO::loadRegion(this, x - 1, z - 1);
+                std::string regionName = std::to_string(x) + std::string(":") + std::to_string(z);
+                regionMap.insert({regionName, VOX_FileIO::loadRegion(this, x - 1, z - 1)});
             }
         }
     }
@@ -436,10 +412,10 @@ namespace VOX_World{
     }
 
     World::~World(){
-        for(int i = 0; i < NUM_REGIONS_LOADED; i ++){
-            if(regions[i] != 0) delete regions[i];
+        for(auto &p: regionMap){
+            Region *r = p.second;
+            if(r != 0) delete r;
         }
-        delete regions;
     }
 
 }
