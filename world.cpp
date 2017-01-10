@@ -156,18 +156,13 @@ namespace VOX_World{
     }
 
     void Region::convertCoordinates(float *x, float *y, float *z, bool toWorld){
+        float xTemp = (*x), zTemp = (*z);
         if(toWorld){
-            if(zOffset < 0) (*z) += (1 - REGION_SIZE - (this->zOffset) - REGION_SIZE) - 1;
-            else (*z) = abs(*z) + this->zOffset;
-            if(xOffset < 0) (*x) += (1 - REGION_SIZE - (this->xOffset) - REGION_SIZE) - 1;
-            else (*x) = abs(*x) + this->xOffset;
+            (*z) = this->zOffset + zTemp;
+            (*x) = this->xOffset + xTemp;
         }else{
-            int xPrime = abs(*x);
-            int zPrime = abs(*z);
-            if( (*x) < 0) (*x) = REGION_SIZE - (REGION_SIZE + xPrime - abs(this->xOffset)) - 1;
-            else (*x) = (xPrime - abs(this->xOffset));
-            if( (*z) < 0) (*z) = REGION_SIZE - (REGION_SIZE + zPrime - abs(this->zOffset)) - 1;
-            else (*z) = (zPrime - abs(this->zOffset));
+            (*z) = zTemp - this->zOffset;
+            (*x) = xTemp - this->xOffset;
         }
     }
 
@@ -211,15 +206,11 @@ namespace VOX_World{
 
     bool Region::checkSurroundingsIsVisible(float x, float y, float z){
         if(y <= 0 || y >= WORLD_HEIGHT - 1) return false;
-        if(xOffset < 0) x ++;
-        if(zOffset < 0) z ++;
         if(isInRegion(x, y, z)){
             convertCoordinates(&x, &y, &z);
             return VOX_World::blocks[getBlock(x, y, z)].visible;
         }
         else{
-//            if(xOffset == -16 && x == REGION_SIZE - 1) x += 0.125;
-//            if(zOffset == -16 && z == REGION_SIZE - 1) z += 0.125;
             return VOX_World::blocks[world->getBlock(x, y, z, false)].visible;
         }
         return false;
@@ -324,45 +315,33 @@ namespace VOX_World{
     }
 
     unsigned short World::getBlock(float x, float y, float z, bool data){
-        int xPrime = (int) x;
-        int yPrime = (int) y;
-        int zPrime = (int) z;
-        if(yPrime >= WORLD_HEIGHT || yPrime < 0) return VOX_Inventory::BlockIds::AIR;
+        if(y >= WORLD_HEIGHT || y < 0) return VOX_Inventory::BlockIds::AIR;
         Region *r = getRegion(x, y, z);
         if(r != 0){
-            xPrime = abs(xPrime) - abs(r->xOffset);
-            zPrime = abs(zPrime) - abs(r->zOffset);
-            if(x < 0) xPrime = REGION_SIZE - (REGION_SIZE + xPrime) - 1;
-            if(z < 0) zPrime = REGION_SIZE - (REGION_SIZE + zPrime) - 1;
-            if(data) return r->blocks[yPrime][xPrime*REGION_SIZE + zPrime];
-            return r->blocks[yPrime][xPrime*REGION_SIZE + zPrime] & 0x00FF;
+            r->convertCoordinates(&x, &y, &z);
+            return r->getBlock(x, y, z, data);
         }
         return VOX_Inventory::BlockIds::AIR;
     }
 
     void World::setBlock(float x, float y, float z, unsigned short blockData){
-        int xPrime = (int) x;
-        int yPrime = (int) y;
-        int zPrime = (int) z;
-        if(yPrime >= WORLD_HEIGHT || y < 0) return;
+        if(y >= WORLD_HEIGHT || y < 0) return;
         Region *r = getRegion(x, y, z);
         if(r != 0){
-            xPrime = abs(xPrime) - abs(r->xOffset);
-            zPrime = abs(zPrime) - abs(r->zOffset);
-            if(x < 0) xPrime = REGION_SIZE - (REGION_SIZE + xPrime) - 1;
-            if(z < 0) zPrime = REGION_SIZE - (REGION_SIZE + zPrime) - 1;
-            r->setBlock(xPrime, yPrime, zPrime, blockData & 0x00FF);
+            r->convertCoordinates(&x, &y, &z, false);
+            r->setBlock(x, y, z, blockData & 0x00FF);
+            r->convertCoordinates(&x, &y, &z, true);
             r->needsUpdate = true;
-            if(xPrime == 0){
+            if((int)x == 0){
                 r = getRegion(x - REGION_SIZE, y, z);
                 if(r != 0) r->needsUpdate = true;
-            }else if(xPrime == REGION_SIZE - 1){
+            }else if((int)x == REGION_SIZE - 1){
                 r = getRegion(x + REGION_SIZE, y, z);
                 if(r != 0) r->needsUpdate = true;
-            }else if(zPrime == 0){
+            }else if((int)z == 0){
                 r = getRegion(x, y, z - REGION_SIZE);
                 if(r != 0) r->needsUpdate = true;
-            }else if(zPrime == REGION_SIZE - 1){
+            }else if((int)z == REGION_SIZE - 1){
                 r = getRegion(x, y, z + REGION_SIZE);
                 if(r != 0) r->needsUpdate = true;
             }
