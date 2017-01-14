@@ -131,7 +131,7 @@ namespace VOX_Mob{
         if(rX < 0) rX += 360;
         if(rY > 90) rY = 90;
         if(rY < -90) rY = -90;
-        if(tickCounter % 60 == 1) world->pruneRegions();
+        if(tickCounter % 30 == 0) world->pruneRegions();
     }
 
     void Player::checkMovement(float *x, float *z){

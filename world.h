@@ -2,13 +2,15 @@
 #include <SFML/Window.hpp>
 #include <string>
 #include <vector>
+#include <thread>
+#include <mutex>
 #include <unordered_map>
 #include "lib/fastNoise/FastNoise.h"
 
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 16
 #define TYPICAL_GROUND 48
-#define REGIONS_FROM_PLAYER_LOAD 3
+#define REGIONS_FROM_PLAYER_LOAD 2
 #define REGIONS_FROM_PLAYER_RENDER 2
 
 namespace VOX_Mob{
@@ -48,14 +50,17 @@ namespace VOX_World{
         int DL_ID = 0;
         void buildDisplayList();
         World *world;
+        unsigned char displayedFaces[WORLD_HEIGHT][REGION_SIZE*REGION_SIZE];
+        bool readyToBuildMesh = false, faceBuildingThreadSpawned = false;
     public:
-        bool needsUpdate;
+        bool needsUpdate, updatingMesh = false;
         int xOffset, zOffset;
         Region(World *world, float xOffset, float zOffset);
         Region(World *world, float xOffset, float zOffset, FILE *file);
         Region();
         ~Region();
         Biome biome;
+        void generateDisplayedFaces();
         void convertCoordinates(float *x, float *y, float *z, bool toWorld = false);
         void modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords = false);
         void setBlock(int x, int y, int z, int blockID);
@@ -70,7 +75,14 @@ namespace VOX_World{
     class World{
     private:
         VOX_Mob::Player *player;
-        std::unordered_map<std::string, Region*> regionMap;
+        std::unordered_map<std::string, Region*> *regionMap;
+        std::vector<sf::Vector2i> *regionsLoadingQueue;
+        std::vector<Region*> *regionsLoadedQueue;
+        std::thread *regionLoadingThread;
+        std::mutex regionLoadingLock;
+        int regionLoadingThreadTickTracker = 0;
+        bool regionLoadingThreadRunning = true;
+        void thread_loadRegions(bool *running, int *tickTracker);
     public:
         FastNoise *height, *moisture, *density;
         World(int seed = 0);

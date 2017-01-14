@@ -1,5 +1,5 @@
 CC := g++ -pg -std=c++11
-LIBS := -lsfml-graphics -lsfml-window -lsfml-system -lGL -lm -lglut -lGLU
+LIBS := -lsfml-graphics -lsfml-window -lsfml-system -lGL -lm -lglut -lGLU -pthread
 LIB_FATNOISE := lib/fastNoise/FastNoise.cpp
 LIB_ALL := $(LIB_FATNOISE)
 EXE_NAME := vox
