@@ -176,61 +176,52 @@ namespace VOX_World{
     }
 
     void Region::generateDisplayedFaces(){
-        readyToBuildMesh = false;
-        float xPrime, yPrime, zPrime;
+        float xPrime, yPrime, zPrime, *texCoords;
+        VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
+        std::vector<float*> faces;
         for(float x = 0; x < REGION_SIZE; x ++){
             for(float z = 0; z < REGION_SIZE; z ++){
                 for(float y = 0; y < WORLD_HEIGHT; y ++){
                     xPrime = x;
                     yPrime = y;
                     zPrime = z;
-                    if(!VOX_World::blocks[getBlock(x, y, z)].visible) displayedFaces[(int) y][(int)x*REGION_SIZE + (int)z] = 0; // Render no faces.
                     convertCoordinates(&xPrime, &yPrime, &zPrime, true);
-                    bool top = (!checkSurroundingsIsVisible(xPrime, yPrime + 1, zPrime));
-                    bool bottom = (!checkSurroundingsIsVisible(xPrime, yPrime - 1, zPrime));
-                    bool right = (!checkSurroundingsIsVisible(xPrime + 1, yPrime, zPrime));
-                    bool left = (!checkSurroundingsIsVisible(xPrime - 1, yPrime, zPrime));
-                    bool front = (!checkSurroundingsIsVisible(xPrime, yPrime, zPrime + 1));
-                    bool back = (!checkSurroundingsIsVisible(xPrime, yPrime, zPrime - 1));
-                    displayedFaces[(int) y][(int)x * REGION_SIZE + (int) z] = (
-                            (top << 5) | (bottom << 4) | (right << 3) | (left << 2) | (front << 1) | (back)
-                    );
-                }
-            }
-        }
-        readyToBuildMesh = true;
-    }
-
-    void Region::buildDisplayList(){
-        if(!readyToBuildMesh) return;
-        if(DL_ID != 0) glDeleteLists(DL_ID, 1);
-        DL_ID = glGenLists(1);
-        glNewList(DL_ID, GL_COMPILE);
-        glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
-        VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
-        float xPrime, yPrime, zPrime, *texCoords;
-        for(float x = 0; x < REGION_SIZE; x ++){
-            for(float z = 0; z < REGION_SIZE; z ++){
-                for(float y = 0; y < WORLD_HEIGHT; y ++){
                     Block block = VOX_World::blocks[getBlock(x, y, z)];
                     if(!block.visible) continue;
                     texCoords = &block.texCoords[0];
-                    xPrime = x;
-                    yPrime = y;
-                    zPrime = z;
-                    unsigned char faces = displayedFaces[(int)y][(int)x*REGION_SIZE + (int)z];
-                    convertCoordinates(&xPrime, &yPrime, &zPrime, true);
-                    if(faces & 0x20) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords);
-                    if(faces & 0x10) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords);
-                    if(faces & 0x08) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords);
-                    if(faces & 0x04) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords);
-                    if(faces & 0x02) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords);
-                    if(faces & 0x01) cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords);
+                    if(!checkSurroundingsIsVisible(xPrime, yPrime + 1, zPrime)){
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords));
+                    }
+                    if(!checkSurroundingsIsVisible(xPrime, yPrime - 1, zPrime)){
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords));
+                    }
+                    if(!checkSurroundingsIsVisible(xPrime + 1, yPrime, zPrime)){
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords));
+                    }
+                    if(!checkSurroundingsIsVisible(xPrime - 1, yPrime, zPrime)){
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords));
+                    }
+                    if(!checkSurroundingsIsVisible(xPrime, yPrime, zPrime + 1)){
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords));
+                    }
+                    if(!checkSurroundingsIsVisible(xPrime, yPrime, zPrime - 1)){
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords));
+                    }
+
                 }
             }
         }
-
-        glEndList();
+        float *newVertexArray = new float[NUM_FLOATS_PER_FACE * faces.size()];
+        for(unsigned int i = 0; i < faces.size(); i ++){
+            for(int j = 0; j < NUM_FLOATS_PER_FACE; j ++){
+                newVertexArray[i * NUM_FLOATS_PER_FACE + j] = faces.at(i)[j];
+            }
+            delete [] faces.at(i);
+        }
+        if(vertexArray != 0) delete vertexArray;
+        vertexArray = newVertexArray;
+        numFacesDrawn = faces.size();
+        updatingMesh = faceBuildingThreadSpawned = false;
     }
 
     bool Region::checkSurroundingsIsVisible(float x, float y, float z){
@@ -257,21 +248,29 @@ namespace VOX_World{
             needsUpdate = false;
         }
         if(updatingMesh){
-            if(!faceBuildingThreadSpawned && !readyToBuildMesh){
+            if(!faceBuildingThreadSpawned){
                 std::thread buildFaces(&Region::generateDisplayedFaces, this);
                 buildFaces.detach();
                 faceBuildingThreadSpawned = true;
-            }
-            if(readyToBuildMesh){
-                buildDisplayList();
-                readyToBuildMesh = faceBuildingThreadSpawned = updatingMesh = false;
             }
         }
     }
 
     void Region::render(){
         glPushMatrix();
-        if(DL_ID != 0) glCallList(DL_ID);
+        //if(DL_ID != 0) glCallList(DL_ID);
+        if(vertexArray != 0){
+            glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, (3 + 2) * 4, vertexArray);
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glTexCoordPointer(2, GL_FLOAT, (3 + 2) * 4, vertexArray + 3);
+            glDrawArrays(GL_QUADS, 0, numFacesDrawn * 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
         glPopMatrix();
     }
 
@@ -374,24 +373,25 @@ namespace VOX_World{
 
     void World::setBlock(float x, float y, float z, unsigned short blockData){
         if(y >= WORLD_HEIGHT || y < 0) return;
-        Region *r = getRegion(x, y, z);
+        Region *r = getRegion(x, y, z), *neighbor;
         if(r != 0){
             r->convertCoordinates(&x, &y, &z, false);
             r->setBlock(x, y, z, blockData & 0x00FF);
             r->convertCoordinates(&x, &y, &z, true);
-            r->needsUpdate = true;
-            if((int)x == 0){
-                r = getRegion(x - 1, y, z);
-                if(r != 0) r->updatingMesh = true;
-            }else if((int)x == REGION_SIZE - 1){
-                r = getRegion(x + 1, y, z);
-                if(r != 0) r->updatingMesh = true;
-            }else if((int)z == 0){
-                r = getRegion(x, y, z - 1);
-                if(r != 0) r->updatingMesh = true;
-            }else if((int)z == REGION_SIZE - 1){
-                r = getRegion(x, y, z + 1);
-                if(r != 0) r->updatingMesh = true;
+            r->needsUpdate = r->updatingMesh = true;
+            if((int)(x - r->xOffset) == 0){
+                neighbor = getRegion(x - REGION_SIZE, y, z);
+                if(neighbor != 0) neighbor->updatingMesh = true;
+            }else if((int)(x - r->xOffset) == REGION_SIZE - 1){
+                neighbor = getRegion(x + REGION_SIZE - 1, y, z);
+                if(neighbor != 0) neighbor->updatingMesh = true;
+            }
+            if((int)(z - r->zOffset) == 0){
+                neighbor = getRegion(x, y, z - REGION_SIZE);
+                if(neighbor != 0) neighbor->updatingMesh = true;
+            }else if((int)(z - r->zOffset) == REGION_SIZE - 1){
+                neighbor = getRegion(x, y, z + REGION_SIZE);
+                if(neighbor != 0) neighbor->updatingMesh = true;
             }
         }
     }
@@ -433,7 +433,7 @@ namespace VOX_World{
                         if(x == 0 && z == 0) continue;
                         auto p = regionMap->find(std::to_string(vec.x + x) + std::string(":") + std::to_string(vec.y + z));
                         if(p != regionMap->end()){
-                            //p->second->updatingMesh = true;
+                            p->second->updatingMesh = true;
                         }
                     }
                 }

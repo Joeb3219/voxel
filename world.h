@@ -12,6 +12,7 @@
 #define TYPICAL_GROUND 48
 #define REGIONS_FROM_PLAYER_LOAD 2
 #define REGIONS_FROM_PLAYER_RENDER 2
+#define NUM_FLOATS_PER_FACE 20
 
 namespace VOX_Mob{
     class Player;
@@ -47,11 +48,12 @@ namespace VOX_World{
 
     class Region{
     private:
-        int DL_ID = 0;
+        int DL_ID = 0, numFacesDrawn = 0;
         void buildDisplayList();
         World *world;
         unsigned char displayedFaces[WORLD_HEIGHT][REGION_SIZE*REGION_SIZE];
-        bool readyToBuildMesh = false, faceBuildingThreadSpawned = false;
+        bool faceBuildingThreadSpawned = false;
+        float *vertexArray = 0; // This is an interleved array. We store in the following order: n1n2n3 v1v2v3t1t2 v1v2v3t1t2 v1v2v3t1t2 v1v2v3t1t2
     public:
         bool needsUpdate, updatingMesh = false;
         int xOffset, zOffset;
