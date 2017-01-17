@@ -134,18 +134,23 @@ namespace VOX_World{
         }
 
         fclose(file);
+
+        delete [] vertexArray;
     }
 
     bool Region::isInRegion(float x, float y, float z){
-        if(y > WORLD_HEIGHT) return false;
-        int xPrime = abs(x);
+        /*int xPrime = abs(x);
         int zPrime = abs(z);
         int xRegion = ((int)(((xPrime + REGION_SIZE) / REGION_SIZE) * REGION_SIZE) - REGION_SIZE);
         int zRegion = ((int)(((zPrime + REGION_SIZE) / REGION_SIZE) * REGION_SIZE) - REGION_SIZE);
         if(x < 0) xRegion = -xRegion - REGION_SIZE;
         if(z < 0) zRegion = -zRegion - REGION_SIZE;
         if(xRegion == this->xOffset && zRegion == this->zOffset) return true;
-        return false;
+        return false;*/
+        convertCoordinates(&x, &y, &z, false);
+        if(x < 0 || x >= REGION_SIZE) return false;
+        if(z < 0 || z >= REGION_SIZE) return false;
+        return true;
     }
 
     unsigned short Region::getBlock(int x, int y, int z, bool data){
@@ -218,7 +223,7 @@ namespace VOX_World{
             }
             delete [] faces.at(i);
         }
-        if(vertexArray != 0) delete vertexArray;
+        if(vertexArray != 0) delete [] vertexArray;
         vertexArray = newVertexArray;
         numFacesDrawn = faces.size();
         updatingMesh = faceBuildingThreadSpawned = false;
@@ -230,9 +235,7 @@ namespace VOX_World{
             convertCoordinates(&x, &y, &z);
             return VOX_World::blocks[getBlock(x, y, z)].visible;
         }
-        else{
-            return VOX_World::blocks[world->getBlock(x, y, z, false)].visible;
-        }
+        else return VOX_World::blocks[world->getBlock(x, y, z, false)].visible;
         return false;
     }
 

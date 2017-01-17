@@ -58,6 +58,15 @@ void Camera::windowResized(int width, int height){
 	glEnable(GL_BLEND);
 	glEnable(GL_NORMALIZE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    GLfloat fogColor[4] = {0.2f, 0.3f, 1.f, 1.f};
+    glFogi(GL_FOG_MODE, GL_LINEAR);
+    glFogfv(GL_FOG_COLOR, fogColor);
+    glFogf(GL_FOG_DENSITY, 0.76f);
+    glHint(GL_FOG_HINT, GL_DONT_CARE);
+    glFogf(GL_FOG_START, 32.0f);
+    glFogf(GL_FOG_END, 40.0f);
+    glEnable(GL_FOG);
 }
 
 void Camera::gluPerspective(float fov, float aspectRatio, float near, float far){
@@ -93,9 +102,11 @@ void Camera::preRender(){
 	glRotatef(rZ, 0, 0, 1);
 	glTranslatef(-(x), -(y + 2.5f), -(z));
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_FOG);
 }
 
 void Camera::pre2DRender(){
+    glDisable(GL_FOG);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
     glMatrixMode( GL_PROJECTION );

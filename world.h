@@ -10,7 +10,7 @@
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 16
 #define TYPICAL_GROUND 48
-#define REGIONS_FROM_PLAYER_LOAD 2
+#define REGIONS_FROM_PLAYER_LOAD 3
 #define REGIONS_FROM_PLAYER_RENDER 2
 #define NUM_FLOATS_PER_FACE 20
 
@@ -48,10 +48,9 @@ namespace VOX_World{
 
     class Region{
     private:
-        int DL_ID = 0, numFacesDrawn = 0;
+        int numFacesDrawn = 0;
         void buildDisplayList();
         World *world;
-        unsigned char displayedFaces[WORLD_HEIGHT][REGION_SIZE*REGION_SIZE];
         bool faceBuildingThreadSpawned = false;
         float *vertexArray = 0; // This is an interleved array. We store in the following order: n1n2n3 v1v2v3t1t2 v1v2v3t1t2 v1v2v3t1t2 v1v2v3t1t2
     public:
