@@ -13,7 +13,11 @@ A "Minecraft clone" to further experiment with C++. Utilizes OpenGL, GLUT, and t
 3. An experiment. It's a toy.
 
 #Logistics
-The game is written in C++ using OpenGL (and GLUT) for display. These libraries are assumed to be installed on the machine. The game was developed on a low-quality laptop with the following specs:
+The game is written in C++ using SFML, and OpenGL (and GLUT) for display. These libraries are assumed to be installed on the machine. Roughly, you must install the following packages:
+* libsfml-dev
+* freeglut3-dev
+
+The game was developed on a low-quality laptop with the following specs:
 * Intel Core i5-4210U CPU @ 1.70GHz × 4
 * Intel Haswell Mobile  GPU
 * 64-bit Ubuntu 16.04 LTS
