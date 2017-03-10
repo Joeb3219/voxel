@@ -32,7 +32,8 @@ namespace VOX_World{
             }
         }
         this->needsUpdate = this->updatingMesh = true;
-        loaded = true;
+        fclose(file);
+	loaded = true;
     }
 
     void Region::spawnRegion(){

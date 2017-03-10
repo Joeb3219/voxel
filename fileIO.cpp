@@ -56,7 +56,7 @@ namespace VOX_FileIO{
         FILE *file = fopen(path.c_str(), "r");
         if(file != 0){
             region = new VOX_World::Region(world, x, z, file);
-            fclose(file);
+	    // We let the region's code handle closing the file since it is asynch.
         }else{
             region = new VOX_World::Region(world, x, z);
         }
