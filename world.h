@@ -53,7 +53,10 @@ namespace VOX_World{
         World *world;
         bool faceBuildingThreadSpawned = false;
         float *vertexArray = 0; // This is an interleved array. We store in the following order: n1n2n3 v1v2v3t1t2 v1v2v3t1t2 v1v2v3t1t2 v1v2v3t1t2
+        void spawnRegion();
+        void loadRegionFromMemory(FILE *file);
     public:
+        bool loaded = false;
         bool needsUpdate, updatingMesh = false;
         int xOffset, zOffset;
         Region(World *world, float xOffset, float zOffset);
@@ -79,11 +82,6 @@ namespace VOX_World{
         std::unordered_map<std::string, Region*> *regionMap;
         std::vector<sf::Vector2i> *regionsLoadingQueue;
         std::vector<Region*> *regionsLoadedQueue;
-        std::thread *regionLoadingThread;
-        std::mutex regionLoadingLock;
-        int regionLoadingThreadTickTracker = 0;
-        bool regionLoadingThreadRunning = true;
-        void thread_loadRegions(bool *running, int *tickTracker);
     public:
         FastNoise *height, *moisture, *density;
         World(int seed = 0);

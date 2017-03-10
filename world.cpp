@@ -17,13 +17,25 @@ namespace VOX_World{
 
     Block *blocks;
 
-    Region::Region(){}
-
-    Region::Region(World *world, float xOffset, float zOffset){
-        this->world = world;
+    void Region::loadRegionFromMemory(FILE *file){
+        unsigned short block;
+        char c;
+        for(int x = 0; x < REGION_SIZE; x ++){
+            for(int z = 0; z < REGION_SIZE; z ++){
+                for(int y = 0; y < WORLD_HEIGHT; y ++){
+                    c = fgetc(file);
+                    block = (c << 8);
+                    c = fgetc(file);
+                    block |= c;
+                    blocks[y][x*REGION_SIZE + z] = block;
+                }
+            }
+        }
         this->needsUpdate = this->updatingMesh = true;
-        this->xOffset = xOffset * REGION_SIZE;
-        this->zOffset = zOffset * REGION_SIZE;
+        loaded = true;
+    }
+
+    void Region::spawnRegion(){
         double heightMap[REGION_SIZE * REGION_SIZE];
         double moistureAverage = 0.0, elevationAverage = 0.0;
         for(int x = 0; x < REGION_SIZE; x ++){
@@ -93,27 +105,26 @@ namespace VOX_World{
                 }
             }
         }
+        loaded = true;
+    }
 
+    Region::Region(){}
+    Region::Region(World *world, float xOffset, float zOffset){
+        // We offload loading to another thread, and then set loaded to true when we're ready.
+        this->world = world;
+        this->needsUpdate = this->updatingMesh = true;
+        this->xOffset = xOffset * REGION_SIZE;
+        this->zOffset = zOffset * REGION_SIZE;
+        std::thread thread_loadRegion(&Region::spawnRegion, this);
+        thread_loadRegion.detach();
     }
 
     Region::Region(World *world, float xOffset, float zOffset, FILE *file){
         this->world = world;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
-        unsigned short block;
-        char c;
-        for(int x = 0; x < REGION_SIZE; x ++){
-            for(int z = 0; z < REGION_SIZE; z ++){
-                for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    c = fgetc(file);
-                    block = (c << 8);
-                    c = fgetc(file);
-                    block |= c;
-                    blocks[y][x*REGION_SIZE + z] = block;
-                }
-            }
-        }
-        this->needsUpdate = this->updatingMesh = true;
+        std::thread thread_loadRegion(&Region::loadRegionFromMemory, this, file);
+        thread_loadRegion.detach();
     }
 
     // Destroying a region will save it to saves/xOffet:zOffset.txt
@@ -139,14 +150,6 @@ namespace VOX_World{
     }
 
     bool Region::isInRegion(float x, float y, float z){
-        /*int xPrime = abs(x);
-        int zPrime = abs(z);
-        int xRegion = ((int)(((xPrime + REGION_SIZE) / REGION_SIZE) * REGION_SIZE) - REGION_SIZE);
-        int zRegion = ((int)(((zPrime + REGION_SIZE) / REGION_SIZE) * REGION_SIZE) - REGION_SIZE);
-        if(x < 0) xRegion = -xRegion - REGION_SIZE;
-        if(z < 0) zRegion = -zRegion - REGION_SIZE;
-        if(xRegion == this->xOffset && zRegion == this->zOffset) return true;
-        return false;*/
         convertCoordinates(&x, &y, &z, false);
         if(x < 0 || x >= REGION_SIZE) return false;
         if(z < 0 || z >= REGION_SIZE) return false;
@@ -327,13 +330,10 @@ namespace VOX_World{
     }
 
     void World::update(){
-        regionLoadingThreadTickTracker ++;
-        regionLoadingLock.lock();
         for(auto &p : *regionMap){
             Region *r = p.second;
-            if(r != 0 && (r->needsUpdate || r->updatingMesh)) r->update();
+            if(r != 0 && r->loaded && (r->needsUpdate || r->updatingMesh)) r->update();
         }
-        regionLoadingLock.unlock();
     }
 
     void World::render(){
@@ -409,43 +409,6 @@ namespace VOX_World{
         return end;
     }
 
-    void World::thread_loadRegions(bool *running, int *tickTracker){
-        sf::Vector2i vec;
-        bool foundVec = false;
-        std::string label;
-        while(*running){
-            if( (*tickTracker) < 4) continue;
-            (*tickTracker) = 0;
-            regionLoadingLock.lock();
-            while(regionsLoadingQueue->size() >= 1 && !foundVec){
-                vec = regionsLoadingQueue->back();
-                regionsLoadingQueue->pop_back();
-                label = std::to_string(vec.x) + std::string(":") + std::to_string(vec.y);
-                if(regionMap->find(label) == regionMap->end()){
-                    foundVec = true;
-                    break;
-                }
-            }
-            regionLoadingLock.unlock();
-            if(foundVec){
-                Region *r = VOX_FileIO::loadRegion(this, vec.x, vec.y);
-                regionLoadingLock.lock();
-                regionsLoadedQueue->push_back(r);
-                for(int x = -1; x <= 1; x ++){
-                    for(int z = -1; z <= 1; z ++){
-                        if(x == 0 && z == 0) continue;
-                        auto p = regionMap->find(std::to_string(vec.x + x) + std::string(":") + std::to_string(vec.y + z));
-                        if(p != regionMap->end()){
-                            p->second->updatingMesh = true;
-                        }
-                    }
-                }
-                regionLoadingLock.unlock();
-            }
-            foundVec = false;
-        }
-    }
-
     void World::pruneRegions(){
         sf::Vector3f currentPos = player->getPosition();
         Region *currentlyIn = getRegion(currentPos.x, currentPos.y, currentPos.z);
@@ -453,12 +416,6 @@ namespace VOX_World{
 
         std::string label;
         int rX, rZ;
-        regionLoadingLock.lock();
-        for(unsigned int i = 0; i < regionsLoadedQueue->size(); i ++){
-            Region *r = regionsLoadedQueue->back();
-            regionsLoadedQueue->pop_back();
-            regionMap->insert({std::to_string(r->xOffset / REGION_SIZE) + std::string(":") + std::to_string(r->zOffset / REGION_SIZE), r});
-        }
         for(int x = -REGIONS_FROM_PLAYER_LOAD; x <= REGIONS_FROM_PLAYER_LOAD; x ++){
             for(int z = -REGIONS_FROM_PLAYER_LOAD; z <= REGIONS_FROM_PLAYER_LOAD; z ++){
                 rX = x + (currentlyIn->xOffset / REGION_SIZE);
@@ -466,11 +423,11 @@ namespace VOX_World{
                 label = std::to_string(rX) + std::string(":") + std::to_string(rZ);
                 auto p = regionMap->find(label);
                 if(p == regionMap->end()){
-                    regionsLoadingQueue->push_back(sf::Vector2i(rX, rZ));
+                    std::cout << "Found region: " << rX << ", " << rZ << " to load!" << std::endl;
+                    regionMap->insert({label, VOX_FileIO::loadRegion(this, rX, rZ)});
                 }
             }
         }
-        regionLoadingLock.unlock();
     }
 
     World::World(int seed){
@@ -493,12 +450,9 @@ namespace VOX_World{
         for(int x = 0; x < 3; x ++){
             for(int z = 0; z < 3; z ++){
                 std::string regionName = std::to_string(x - 1) + std::string(":") + std::to_string(z - 1);
-                regionLoadingLock.lock();
                 regionMap->insert({regionName, VOX_FileIO::loadRegion(this, x - 1, z - 1)});
-                regionLoadingLock.unlock();
             }
         }
-        regionLoadingThread = new std::thread(&World::thread_loadRegions, this, &regionLoadingThreadRunning, &regionLoadingThreadTickTracker);
     }
 
     void World::setPlayer(VOX_Mob::Player *player){
@@ -506,14 +460,10 @@ namespace VOX_World{
     }
 
     World::~World(){
-        regionLoadingLock.lock();
         for(auto &p: *regionMap){
             Region *r = p.second;
             if(r != 0) delete r;
         }
-        regionLoadingLock.unlock();
-        regionLoadingThreadRunning = false;
-        regionLoadingThread->join();
     }
 
 }
