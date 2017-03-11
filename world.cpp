@@ -18,16 +18,13 @@ namespace VOX_World{
     Block *blocks;
 
     void Region::loadRegionFromMemory(FILE *file){
-        unsigned short block;
-        char c;
+        int numCharactersInFile = 65536, i =0;
+        char contents[numCharactersInFile + 1];
+        std::cout << "Read num chars: " << fread(&contents, sizeof(char), numCharactersInFile, file) << std::endl;
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    c = fgetc(file);
-                    block = (c << 8);
-                    c = fgetc(file);
-                    block |= c;
-                    blocks[y][x*REGION_SIZE + z] = block;
+                    blocks[y][x*REGION_SIZE + z] = (contents[i++] << 8) | contents[i++];
                 }
             }
         }
@@ -429,11 +426,19 @@ namespace VOX_World{
                 }
             }
         }
+
+        for(auto &p: *regionMap){
+            Region *r = p.second;
+            if(r != 0 && r->loaded &&
+                abs((r->xOffset - currentlyIn->xOffset) / REGION_SIZE) > REGIONS_FROM_PLAYER_UNLOAD &&
+                abs((r->zOffset - currentlyIn->zOffset) / REGION_SIZE) > REGIONS_FROM_PLAYER_UNLOAD){
+                delete r;
+                regionMap->erase(p.first);
+            }
+        }
     }
 
     World::World(int seed){
-        regionsLoadingQueue = new std::vector<sf::Vector2i>;
-        regionsLoadedQueue = new std::vector<Region*>;
         regionMap = new std::unordered_map<std::string, Region*>;
         height = new FastNoise();
         height->SetNoiseType(FastNoise::SimplexFractal);
@@ -463,7 +468,10 @@ namespace VOX_World{
     World::~World(){
         for(auto &p: *regionMap){
             Region *r = p.second;
-            if(r != 0) delete r;
+            if(r != 0){
+                delete r;
+                regionMap->erase(p.first);
+            }
         }
     }
 

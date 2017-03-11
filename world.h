@@ -10,8 +10,9 @@
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 16
 #define TYPICAL_GROUND 48
-#define REGIONS_FROM_PLAYER_LOAD 3
+#define REGIONS_FROM_PLAYER_LOAD 2
 #define REGIONS_FROM_PLAYER_RENDER 2
+#define REGIONS_FROM_PLAYER_UNLOAD 3
 #define NUM_FLOATS_PER_FACE 20
 
 namespace VOX_Mob{
@@ -80,8 +81,6 @@ namespace VOX_World{
     private:
         VOX_Mob::Player *player;
         std::unordered_map<std::string, Region*> *regionMap;
-        std::vector<sf::Vector2i> *regionsLoadingQueue;
-        std::vector<Region*> *regionsLoadedQueue;
     public:
         FastNoise *height, *moisture, *density;
         World(int seed = 0);
