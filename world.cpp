@@ -20,7 +20,7 @@ namespace VOX_World{
     void Region::loadRegionFromMemory(FILE *file){
         int numCharactersInFile = 65536, i =0;
         char contents[numCharactersInFile + 1];
-        std::cout << "Read num chars: " << fread(&contents, sizeof(char), numCharactersInFile, file) << std::endl;
+        fread(&contents, sizeof(char), numCharactersInFile, file);
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
@@ -40,6 +40,7 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 heightMap[x*REGION_SIZE + z] = VOX_Math::convertScale(world->height->GetNoise(x + this->xOffset,z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
                 elevationAverage += heightMap[x*REGION_SIZE + z];
+                moistureAverage += heightMap[x*REGION_SIZE + z];
                 moistureAverage += VOX_Math::convertScale(world->moisture->GetNoise(x + this->xOffset, z + this->zOffset), -1.0f, 1.f, 0.0f, 1.f);
             }
         }
@@ -335,17 +336,29 @@ namespace VOX_World{
     }
 
     void World::render(){
+        facesRendered = 0;
         sf::Vector3f currentPos = player->getPosition();
-        // TODO: FRUSTUM CULLING
+        sf::Vector3f viewAngles = player->getViewAngles();
         Region *currentlyIn = getRegion(currentPos.x, currentPos.y, currentPos.z);
         if(currentlyIn == 0) return; // In a non-existent region.
+        int currentXOffset = currentlyIn->xOffset, currentZOffset = currentlyIn->zOffset;
+        sf::Vector3f leftBound = VOX_Math::computeVectorFromPos(currentPos, viewAngles.x - FOV / 2, viewAngles.y, FARCLIP);
+        sf::Vector3f rightBound = VOX_Math::computeVectorFromPos(currentPos, viewAngles.x + FOV / 2, viewAngles.y, FARCLIP);
 
-        std::string label;
         for(auto& p: *regionMap){
             Region *r = p.second;
-            if( abs( (r->xOffset - currentlyIn->xOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER &&
-                abs( (r->zOffset - currentlyIn->zOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER){
+            if( abs( (r->xOffset - currentXOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER &&
+                abs( (r->zOffset - currentZOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER){
+                bool shouldRender = false;
+                for(int x = -3; x < REGION_SIZE + 3; x ++){
+                    for(int z = -3; z < REGION_SIZE + 3; z ++){
+                        if(VOX_Math::insideTriangle(currentPos, leftBound, rightBound, sf::Vector3f(r->xOffset + x, 0, r->zOffset + z))) shouldRender = true;
+                    }
+                }
+                if(shouldRender){
                     r->render();
+                    facesRendered += r->numFacesDrawn;
+                }
             }
         }
     }

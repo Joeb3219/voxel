@@ -56,6 +56,8 @@ int main(int argc, char **argv){
         VOX_Graphics::renderString(8, camera->height - 39, std::string("Looking at: ") +
                 VOX_World::blocks[world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false)].name + ": " + std::to_string(lookingAt.x)
                 + ", " + std::to_string(lookingAt.y) + ", " + std::to_string(lookingAt.z));
+        VOX_Graphics::renderString(8, camera->height - 52, std::string("Faces Rendered : ") +
+                std::to_string(world->facesRendered));
 
         player->renderInventory(camera->width);
 

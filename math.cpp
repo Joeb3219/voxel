@@ -7,6 +7,18 @@
 
 namespace VOX_Math{
 
+    float areaOfTriangle(sf::Vector3f origin, sf::Vector3f left, sf::Vector3f right){
+        return fabs((origin.x*(left.z-right.z) + left.x*(right.z-origin.z)+ right.x*(origin.z-left.z))/2.0);
+    }
+
+    bool insideTriangle(sf::Vector3f origin, sf::Vector3f left, sf::Vector3f right, sf::Vector3f point){
+        float totalArea = areaOfTriangle (origin, left, right);
+        float a = areaOfTriangle (point, left, right);
+        float b = areaOfTriangle (origin, point, right);
+        float c = areaOfTriangle (origin, left, point);
+        return fabs(totalArea - (a + b + c)) <= 0.0001;
+    }
+
     sf::Vector3f normalizeVector(sf::Vector3f vector){
         float length = sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
         return sf::Vector3f(vector.x / length, vector.y / length, vector.z / length);

@@ -49,7 +49,6 @@ namespace VOX_World{
 
     class Region{
     private:
-        int numFacesDrawn = 0;
         void buildDisplayList();
         World *world;
         bool faceBuildingThreadSpawned = false;
@@ -57,6 +56,7 @@ namespace VOX_World{
         void spawnRegion();
         void loadRegionFromMemory(FILE *file);
     public:
+        int numFacesDrawn = 0;
         bool loaded = false;
         bool needsUpdate, updatingMesh = false;
         int xOffset, zOffset;
@@ -82,6 +82,7 @@ namespace VOX_World{
         VOX_Mob::Player *player;
         std::unordered_map<std::string, Region*> *regionMap;
     public:
+        int facesRendered = 0;
         FastNoise *height, *moisture, *density;
         World(int seed = 0);
         ~World();

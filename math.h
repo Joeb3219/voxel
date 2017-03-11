@@ -13,6 +13,7 @@ namespace VOX_Math{
     void calculateFalling(float *yPosition, float *yVelocity, int ticksPassed);
     float norm(sf::Vector3f vec);
     sf::Vector3f computeVectorFromPos(sf::Vector3f origin, float rX, float rY, float dist);
+    bool insideTriangle(sf::Vector3f origin, sf::Vector3f left, sf::Vector3f right, sf::Vector3f point);
 
 }
 

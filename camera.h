@@ -6,7 +6,7 @@
 #define DEBUG 0
 
 #define NEARCLIP 0.0001
-#define FARCLIP 96.0
+#define FARCLIP 64.0
 #define FOV 60
 
 namespace VOX_Mob{
