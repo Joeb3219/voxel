@@ -47,7 +47,7 @@ namespace VOX_FileIO{
         return items;
     }
 
-    
+
 
     VOX_World::Region* loadRegion(VOX_World::World *world, int x, int z){
         VOX_World::Region *region;
@@ -223,14 +223,27 @@ GLuint VOX_FileIO::loadBitmapTexture(const char *fileName){
     fread(data, 1, width * height * 3, file);
     fclose( file );                       // We no longer need the file, close it.
 
+    unsigned char *dataAlphatized = new unsigned char[width * height * 4];
+    int j = 0;
+    for(int i = 1; i <= width * height * 4; i ++){
+        if(i != 0 && i % 4 == 0){
+            dataAlphatized[i - 1] = 255;
+            if(( (dataAlphatized[i - 2] << 16) | (dataAlphatized[i - 3] << 8) | dataAlphatized[i - 4]) == 0xff82f8) dataAlphatized[i -1] = 0;
+        }else{
+            dataAlphatized[i - 1] = data[j];
+            j++;
+        }
+    }
+
     // Now that we have an array of colors, have OpenGL map them to a texture.
-    glGenTextures( 1, &texture );
+    glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, dataAlphatized);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     delete [] data;
+    delete [] dataAlphatized;
 
     return texture;
 }

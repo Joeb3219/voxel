@@ -1,9 +1,6 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Window.hpp>
 #include <string>
-#include <vector>
-#include <thread>
-#include <mutex>
 #include <unordered_map>
 #include "lib/fastNoise/FastNoise.h"
 

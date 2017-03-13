@@ -16,7 +16,7 @@ namespace VOX_Math{
         float a = areaOfTriangle (point, left, right);
         float b = areaOfTriangle (origin, point, right);
         float c = areaOfTriangle (origin, left, point);
-        return fabs(totalArea - (a + b + c)) <= 0.0001;
+        return fabs(totalArea - (a + b + c)) <= 0.001;
     }
 
     sf::Vector3f normalizeVector(sf::Vector3f vector){

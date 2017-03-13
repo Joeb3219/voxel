@@ -27,7 +27,7 @@ namespace VOX_Graphics{
         float* renderFace(float x, float y, float z, Face face, float *texCoords);
     };
 
-    void renderString(int x, int y, std::string str);
+    void renderString(int x, int y, std::string str, sf::Vector3f color = sf::Vector3f(1.0f, 1.0f, 1.0f));
 
 }
 

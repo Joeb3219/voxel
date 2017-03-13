@@ -163,56 +163,53 @@ namespace VOX_Mob{
     }
 
     void Player::renderInventory(float width){
-        float blockSize = 48.0f, border = 3.0f;
+        float blockSize = 48.0f, border = 3.0f, increment = 1.0 / 32.0f;
+        float bottomLeftY = 28.0 * increment, bottomLeftX = 0.0;
         float inventoryWidth = (blockSize*9) + border, inventoryHeight = blockSize;
         float x = (width - inventoryWidth) / 2.0f, y = 0.0f, drawIncrement = 1.0 / 32.0f;
         float *texCoords;
         int item, quantity;
 
-        // Used for drawing inventory textures
-        glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
-
-        glPushAttrib(GL_CURRENT_BIT);
-        glColor3f(0.3f, 0.3f, 0.3f);
-        glBegin(GL_QUADS);
-            glVertex2f(x, y);
-            glVertex2f(x + inventoryWidth + (border * 9), y);
-            glVertex2f(x + inventoryWidth + (border * 9), y + inventoryHeight + border * 2);
-            glVertex2f(x, y + inventoryHeight + border * 2);
-        glEnd();
-
         x += border;
         y += border;
+        glPushAttrib(GL_CURRENT_BIT);
 
+        glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
         for(int i = 0; i < 9; i ++){
             item = inventory->getSlot(i, false) & 0x00000FFF;
             quantity = inventory->getSlot(i, true) >> 24;
 
-            if(i == inventory->selectedSlot) glColor3f(0.5f, 0.5f, 0.5f);
-            else glColor3f(0.8f, 0.8f, 0.8f);
+            if(i == inventory->selectedSlot) bottomLeftX = drawIncrement;
+            else bottomLeftX = 0;
+
+            glEnable(GL_TEXTURE_2D);
             glBegin(GL_QUADS);
-                glVertex2f(x, y);
-                glVertex2f(x + blockSize, y);
-                glVertex2f(x + blockSize, y + inventoryHeight);
-                glVertex2f(x, y + inventoryHeight);
+                glTexCoord2f(bottomLeftX, bottomLeftY); glVertex2f(x, y);
+                glTexCoord2f(bottomLeftX + increment, bottomLeftY); glVertex2f(x + blockSize, y);
+                glTexCoord2f(bottomLeftX + increment, bottomLeftY + increment); glVertex2f(x + blockSize, y + blockSize);
+                glTexCoord2f(bottomLeftX, bottomLeftY + increment); glVertex2f(x, y + blockSize);
             glEnd();
+            glDisable(GL_TEXTURE_2D);
 
-            if(item != NULL_ITEM){
-                if(VOX_Inventory::isBlock(item)) texCoords = VOX_World::blocks[item].texCoords;
-                else texCoords = VOX_Inventory::items[item - ITEMS_BEGIN].texCoords;
-                glColor3f(1.0f, 1.0f, 1.0f);
-                glEnable(GL_TEXTURE_2D);
-                glBegin(GL_QUADS);
-                    glTexCoord2f(texCoords[1], texCoords[0]); glVertex2f(x + border, y + border);
-                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0]); glVertex2f(x + blockSize - border, y + border);
-                    glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0] + drawIncrement); glVertex2f(x + blockSize - border, y + inventoryHeight - border);
-                    glTexCoord2f(texCoords[1], texCoords[0] + drawIncrement); glVertex2f(x + border, y + inventoryHeight - border);
-                glEnd();
-                glDisable(GL_TEXTURE_2D);
-                VOX_Graphics::renderString(x, y + 16, std::to_string(quantity));
-            }
 
-            x += border + blockSize;
+            glEnable(GL_BLEND);
+            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                if(item != 0x00000FFF){
+                    if(VOX_Inventory::isBlock(item)) texCoords = VOX_World::blocks[item].texCoords;
+                    else texCoords = VOX_Inventory::items[item - ITEMS_BEGIN].texCoords;
+                    glEnable(GL_TEXTURE_2D);
+                    glBegin(GL_QUADS);
+                        glTexCoord2f(texCoords[1], texCoords[0]); glVertex2f(x + border, y + border);
+                        glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0]); glVertex2f(x + blockSize - border, y + border);
+                        glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0] + drawIncrement); glVertex2f(x + blockSize - border, y + inventoryHeight - border);
+                        glTexCoord2f(texCoords[1], texCoords[0] + drawIncrement); glVertex2f(x + border, y + inventoryHeight - border);
+                    glEnd();
+                    glDisable(GL_TEXTURE_2D);
+                    VOX_Graphics::renderString(x + (blockSize * 1.0 / 2.0), y + blockSize - (blockSize * 6.0 / 7.0), std::to_string(quantity), sf::Vector3f(0.0f, 0.0f, 0.0f));
+                }
+            glDisable(GL_BLEND);
+
+            x += blockSize;
         }
 
 

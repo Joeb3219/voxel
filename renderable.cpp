@@ -14,12 +14,14 @@ namespace VOX_Graphics{
 
     GLuint textureAtlas;
 
-    void renderString(int x, int y, std::string str){
+    void renderString(int x, int y, std::string str, sf::Vector3f color){
+        glPushAttrib(GL_CURRENT_BIT);
+        glColor3f(color.x, color.y, color.z);
         glRasterPos2i(x, y);
-        glColor3f(1.f, 1.f, 1.f);
-        for ( unsigned int i = 0; i < str.size(); ++i ) {
+        for(unsigned int i = 0; i < str.size(); i++){
             glutBitmapCharacter(GLUT_BITMAP_8_BY_13, str.at(i));
         }
+        glPopAttrib();
     }
 
     Cube::Cube(){

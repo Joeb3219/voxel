@@ -28,9 +28,9 @@ namespace VOX_World{
                 }
             }
         }
-        this->needsUpdate = this->updatingMesh = true;
         fclose(file);
-	loaded = true;
+	    loaded = true;
+        this->needsUpdate = this->updatingMesh = true;
     }
 
     void Region::spawnRegion(){
@@ -105,13 +105,13 @@ namespace VOX_World{
             }
         }
         loaded = true;
+        this->needsUpdate = this->updatingMesh = true;
     }
 
     Region::Region(){}
     Region::Region(World *world, float xOffset, float zOffset){
         // We offload loading to another thread, and then set loaded to true when we're ready.
         this->world = world;
-        this->needsUpdate = this->updatingMesh = true;
         this->xOffset = xOffset * REGION_SIZE;
         this->zOffset = zOffset * REGION_SIZE;
         std::thread thread_loadRegion(&Region::spawnRegion, this);
@@ -128,6 +128,7 @@ namespace VOX_World{
 
     // Destroying a region will save it to saves/xOffet:zOffset.txt
     Region::~Region(){
+        std::cout << "Saving region: " << xOffset << ", " << zOffset << std::endl;
         std::string fileName("saves/");
         fileName += std::to_string(xOffset) + std::string(":") + std::to_string(zOffset) + std::string(".txt");
         FILE *file = fopen(fileName.c_str(), "w+");
@@ -342,17 +343,18 @@ namespace VOX_World{
         Region *currentlyIn = getRegion(currentPos.x, currentPos.y, currentPos.z);
         if(currentlyIn == 0) return; // In a non-existent region.
         int currentXOffset = currentlyIn->xOffset, currentZOffset = currentlyIn->zOffset;
-        sf::Vector3f leftBound = VOX_Math::computeVectorFromPos(currentPos, viewAngles.x - FOV / 2, viewAngles.y, FARCLIP);
-        sf::Vector3f rightBound = VOX_Math::computeVectorFromPos(currentPos, viewAngles.x + FOV / 2, viewAngles.y, FARCLIP);
+        sf::Vector3f origin = VOX_Math::computeVectorFromPos(currentPos, viewAngles.x + 180, viewAngles.y + 180, - 4.0f);
+        sf::Vector3f leftBound = VOX_Math::computeVectorFromPos(origin, viewAngles.x - FOV / 2, viewAngles.y, FARCLIP + 4.0f);
+        sf::Vector3f rightBound = VOX_Math::computeVectorFromPos(origin, viewAngles.x + FOV / 2, viewAngles.y, FARCLIP + 4.0f);
 
         for(auto& p: *regionMap){
             Region *r = p.second;
             if( abs( (r->xOffset - currentXOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER &&
                 abs( (r->zOffset - currentZOffset) / REGION_SIZE) <= REGIONS_FROM_PLAYER_RENDER){
                 bool shouldRender = false;
-                for(int x = -3; x < REGION_SIZE + 3; x ++){
-                    for(int z = -3; z < REGION_SIZE + 3; z ++){
-                        if(VOX_Math::insideTriangle(currentPos, leftBound, rightBound, sf::Vector3f(r->xOffset + x, 0, r->zOffset + z))) shouldRender = true;
+                for(int x = -5; x < REGION_SIZE + 5; x ++){
+                    for(int z = -5; z < REGION_SIZE + 5; z ++){
+                        if(VOX_Math::insideTriangle(origin, leftBound, rightBound, sf::Vector3f(r->xOffset + x, 0, r->zOffset + z))) shouldRender = true;
                     }
                 }
                 if(shouldRender){
@@ -483,9 +485,11 @@ namespace VOX_World{
             Region *r = p.second;
             if(r != 0){
                 delete r;
-                regionMap->erase(p.first);
             }
         }
+        delete density;
+        delete moisture;
+        delete height;
     }
 
 }
