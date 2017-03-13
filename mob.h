@@ -2,6 +2,7 @@
 
 namespace VOX_Inventory{
     class Inventory;
+    class PlayerInventory;
 }
 
 namespace VOX_World{
@@ -23,7 +24,7 @@ namespace VOX_Mob{
         float x = 0, y = 0, z = 0, rX = 0, rY = 0, rZ = 0;
         float yVelocity = 0;
         int tickCounter = 0;
-        VOX_Inventory::Inventory *inventory = 0;
+        VOX_Inventory::PlayerInventory *inventory = 0;
         VOX_World::World *world = 0;
         float moveSpeed = 0.05f;
         void checkMovement(float *x, float *z);

@@ -16,15 +16,21 @@
 namespace VOX_World{
 
     Block *blocks;
+    BlockData *NULL_BLOCK = new BlockData();
 
     void Region::loadRegionFromMemory(FILE *file){
-        int numCharactersInFile = 65536, i =0;
+        int numCharactersInFile = 65536 * 2, i =0;
         char contents[numCharactersInFile + 1];
         fread(&contents, sizeof(char), numCharactersInFile, file);
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    blocks[y][x*REGION_SIZE + z] = (contents[i++] << 8) | contents[i++];
+                    BlockData *block = new BlockData();
+                    block->lighting = contents[i++];
+                    block->other = contents[i++];
+                    block->meta = contents[i++];
+                    block->id = contents[i++];
+                    blocks[y][x*REGION_SIZE + z] = block;
                 }
             }
         }
@@ -132,14 +138,17 @@ namespace VOX_World{
         std::string fileName("saves/");
         fileName += std::to_string(xOffset) + std::string(":") + std::to_string(zOffset) + std::string(".txt");
         FILE *file = fopen(fileName.c_str(), "w+");
-        unsigned short block;
+        BlockData *block;
 
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     block = blocks[y][x*REGION_SIZE + z];
-                    fputc((block & 0xFF00) >> 8, file);
-                    fputc((block & 0x00FF), file);
+                    fputc(block->lighting, file);
+                    fputc(block->other, file);
+                    fputc(block->meta, file);
+                    fputc(block->id, file);
+                    delete block;
                 }
             }
         }
@@ -156,14 +165,17 @@ namespace VOX_World{
         return true;
     }
 
-    unsigned short Region::getBlock(int x, int y, int z, bool data){
-        if(!data) return blocks[y][x*REGION_SIZE + z] & 0x00FF;
+    BlockData* Region::getBlock(int x, int y, int z){
+        if(y >= WORLD_HEIGHT || y < 0) return NULL_BLOCK;
         return blocks[y][x*REGION_SIZE + z];
     }
 
     void Region::setBlock(int x, int y, int z, int blockID){
-        int meta = VOX_World::blocks[blockID].damage;
-        blocks[y][x*REGION_SIZE + z] = (((meta & 0x00FF) << 8) | (blockID & 0x00FF));
+        BlockData *block = new BlockData();
+        block->lighting = block->other = 0;
+        block->meta = VOX_World::blocks[blockID].damage;
+        block->id = blockID;
+        blocks[y][x*REGION_SIZE + z] = block;
     }
 
     void Region::convertCoordinates(float *x, float *y, float *z, bool toWorld){
@@ -177,12 +189,6 @@ namespace VOX_World{
         }
     }
 
-    void Region::modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords){
-        if(!correctCoords) convertCoordinates(&x, &y, &z);
-        unsigned short id = blocks[(int)y][(int)x*REGION_SIZE + (int)z];
-        blocks[(int)y][(int)x*REGION_SIZE + (int)z] = (newMeta << 8) | (id & 0x00FF);
-    }
-
     void Region::generateDisplayedFaces(){
         float xPrime, yPrime, zPrime, *texCoords;
         VOX_Graphics::Cube cube = VOX_Graphics::Cube::getInstance();
@@ -194,7 +200,7 @@ namespace VOX_World{
                     yPrime = y;
                     zPrime = z;
                     convertCoordinates(&xPrime, &yPrime, &zPrime, true);
-                    Block block = VOX_World::blocks[getBlock(x, y, z)];
+                    Block block = VOX_World::blocks[(int)getBlock(x, y, z)->id];
                     if(!block.visible) continue;
                     texCoords = &block.texCoords[0];
                     if(!checkSurroundingsIsVisible(xPrime, yPrime + 1, zPrime)){
@@ -236,18 +242,22 @@ namespace VOX_World{
         if(y <= 0 || y >= WORLD_HEIGHT - 1) return false;
         if(isInRegion(x, y, z)){
             convertCoordinates(&x, &y, &z);
-            return VOX_World::blocks[getBlock(x, y, z)].visible;
+            return VOX_World::blocks[(int)getBlock(x, y, z)->id].visible;
         }
-        else return VOX_World::blocks[world->getBlock(x, y, z, false)].visible;
+        else return VOX_World::blocks[(int)world->getBlock(x, y, z)->id].visible;
         return false;
     }
 
     void Region::update(){
+        if(!loaded) return; // We aren't loaded, how could we be updating?
         if(needsUpdate){
             for(int x = 0; x < REGION_SIZE; x ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     for(int z = 0; z < REGION_SIZE; z ++){
-                        if(getBlock(x, y, z) == VOX_Inventory::BlockIds::GRASS && VOX_World::blocks[getBlock(x, y + 1, z)].visible == true) setBlock(x, y, z, VOX_Inventory::BlockIds::DIRT);
+                        BlockData *block = getBlock(x, y, z);
+                        if(block->id == VOX_Inventory::BlockIds::GRASS){
+                            if(VOX_World::blocks[(int)getBlock(x, y + 1, z)->id].visible == true) block->id = VOX_Inventory::BlockIds::DIRT;
+                        }
                     }
                 }
             }
@@ -373,21 +383,22 @@ namespace VOX_World{
         return 0;
     }
 
-    Block World::getBlock(unsigned short identifier){
+    Block World::getBlock(unsigned int identifier){
         return blocks[identifier & 0x00FF];
     }
 
-    unsigned short World::getBlock(float x, float y, float z, bool data){
-        if(y >= WORLD_HEIGHT || y < 0) return VOX_Inventory::BlockIds::AIR;
+    BlockData* World::getBlock(float x, float y, float z){
+        if(y >= WORLD_HEIGHT || y < 0) return NULL_BLOCK;
         Region *r = getRegion(x, y, z);
         if(r != 0){
+            if(!r->loaded) return NULL_BLOCK;
             r->convertCoordinates(&x, &y, &z);
-            return r->getBlock(x, y, z, data);
+            return r->getBlock(x, y, z);
         }
-        return VOX_Inventory::BlockIds::AIR;
+        return NULL_BLOCK;
     }
 
-    void World::setBlock(float x, float y, float z, unsigned short blockData){
+    void World::setBlock(float x, float y, float z, unsigned int blockData){
         if(y >= WORLD_HEIGHT || y < 0) return;
         Region *r = getRegion(x, y, z), *neighbor;
         if(r != 0){
@@ -417,7 +428,7 @@ namespace VOX_World{
         int steps = abs(end.y - start.y) * 8;
         for(int i = 0; i < steps; i ++){
             if(i != 0) start -= stepVector;
-            if(blocks[getBlock(start.x, start.y, start.z, false)].solid == true) return start;
+            if(blocks[(int)getBlock(start.x, start.y, start.z)->id].solid == true) return start;
         }
         return end;
     }

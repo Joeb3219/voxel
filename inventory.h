@@ -51,6 +51,17 @@ namespace VOX_Inventory{
         bool modifySlot(int slot, char num);
         bool addItem(int id, char num);
         int getNumSlots();
+        virtual void render(float width) = 0;
+    };
+
+    class PlayerInventory : public Inventory{
+    private:
+        unsigned int *contents;
+        int numSlots;
+    public:
+        PlayerInventory(int numSlots);
+        ~PlayerInventory();
+        void render(float width);
     };
 
 }

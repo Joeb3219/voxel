@@ -53,9 +53,12 @@ int main(int argc, char **argv){
         VOX_Graphics::renderString(8, camera->height - 26, std::string("[x,y,z]: ") + std::to_string(playerPos.x)
                 + ", " + std::to_string(playerPos.y) + ", " + std::to_string(playerPos.z));
         sf::Vector3f lookingAt = player->getLookingAt();
+        VOX_World::BlockData *blockLookingAt = world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z);
         VOX_Graphics::renderString(8, camera->height - 39, std::string("Looking at: ") +
-                VOX_World::blocks[world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false)].name + ": " + std::to_string(lookingAt.x)
-                + ", " + std::to_string(lookingAt.y) + ", " + std::to_string(lookingAt.z));
+                BLOCK_NAME(lookingAt.x, lookingAt.y, lookingAt.z) + " (" + std::to_string(blockLookingAt->lighting) + ":" +
+                std::to_string(blockLookingAt->other) + ":" + std::to_string(blockLookingAt->meta) + ":"
+                + std::to_string(blockLookingAt->id) + "): " + std::to_string(lookingAt.x) +
+                ", " + std::to_string(lookingAt.y) + ", " + std::to_string(lookingAt.z));
         VOX_Graphics::renderString(8, camera->height - 52, std::string("Faces Rendered : ") +
                 std::to_string(world->facesRendered));
 

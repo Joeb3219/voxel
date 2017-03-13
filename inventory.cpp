@@ -1,6 +1,8 @@
 #include <iostream>
 #include "inventory.h"
 #include "fileIO.h"
+#include "renderable.h"
+#include "world.h"
 
 /*
  * Inventory structure:
@@ -150,6 +152,71 @@ namespace VOX_Inventory{
     int getItemWithDefaultMeta(int id){
         if(isBlock(id)) return id;
         return ((items[id - ITEMS_BEGIN].meta) << 12) | id;
+    }
+
+    PlayerInventory::PlayerInventory(int numSlots) : Inventory(numSlots){
+        this->numSlots = numSlots;
+        this->contents = new unsigned int[numSlots];
+        this->selectedSlot = 0;
+        for(int i = 0; i < numSlots; i ++) contents[i] = 0xFFFFFFFF;
+    }
+
+    PlayerInventory::~PlayerInventory(){
+        delete [] contents;
+    }
+
+    void PlayerInventory::render(float width){
+        float blockSize = 48.0f, border = 3.0f, increment = 1.0 / 32.0f;
+        float bottomLeftY = 28.0 * increment, bottomLeftX = 0.0;
+        float inventoryWidth = (blockSize*9) + border, inventoryHeight = blockSize;
+        float x = (width - inventoryWidth) / 2.0f, y = 0.0f, drawIncrement = 1.0 / 32.0f;
+        float *texCoords;
+        int item, quantity;
+
+        x += border;
+        y += border;
+        glPushAttrib(GL_CURRENT_BIT);
+
+        glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
+        for(int i = 0; i < 9; i ++){
+            item = getSlot(i, false) & 0x00000FFF;
+            quantity = getSlot(i, true) >> 24;
+
+            if(i == selectedSlot) bottomLeftX = drawIncrement;
+            else bottomLeftX = 0;
+
+            glEnable(GL_TEXTURE_2D);
+            glBegin(GL_QUADS);
+                glTexCoord2f(bottomLeftX, bottomLeftY); glVertex2f(x, y);
+                glTexCoord2f(bottomLeftX + increment, bottomLeftY); glVertex2f(x + blockSize, y);
+                glTexCoord2f(bottomLeftX + increment, bottomLeftY + increment); glVertex2f(x + blockSize, y + blockSize);
+                glTexCoord2f(bottomLeftX, bottomLeftY + increment); glVertex2f(x, y + blockSize);
+            glEnd();
+            glDisable(GL_TEXTURE_2D);
+
+
+            glEnable(GL_BLEND);
+            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                if(item != 0x00000FFF){
+                    if(VOX_Inventory::isBlock(item)) texCoords = VOX_World::blocks[item].texCoords;
+                    else texCoords = VOX_Inventory::items[item - ITEMS_BEGIN].texCoords;
+                    glEnable(GL_TEXTURE_2D);
+                    glBegin(GL_QUADS);
+                        glTexCoord2f(texCoords[1], texCoords[0]); glVertex2f(x + border, y + border);
+                        glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0]); glVertex2f(x + blockSize - border, y + border);
+                        glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0] + drawIncrement); glVertex2f(x + blockSize - border, y + inventoryHeight - border);
+                        glTexCoord2f(texCoords[1], texCoords[0] + drawIncrement); glVertex2f(x + border, y + inventoryHeight - border);
+                    glEnd();
+                    glDisable(GL_TEXTURE_2D);
+                    VOX_Graphics::renderString(x + (blockSize * 1.0 / 2.0), y + blockSize - (blockSize * 6.0 / 7.0), std::to_string(quantity), sf::Vector3f(0.0f, 0.0f, 0.0f));
+                }
+            glDisable(GL_BLEND);
+
+            x += blockSize;
+        }
+
+
+        glPopAttrib();
     }
 
 }

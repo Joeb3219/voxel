@@ -12,6 +12,9 @@
 #define REGIONS_FROM_PLAYER_UNLOAD 3
 #define NUM_FLOATS_PER_FACE 20
 
+#define IS_SOLID(x, y, z) VOX_World::blocks[(int)world->getBlock(x, y, z)->id].solid
+#define BLOCK_NAME(x, y, z) VOX_World::blocks[(int)world->getBlock(x, y, z)->id].name
+
 namespace VOX_Mob{
     class Player;
 }
@@ -31,6 +34,11 @@ namespace VOX_World{
     enum Biome{GRASSLAND};
 
     Biome getBiome(double elevation, double moisture);
+
+    typedef struct BlockData{
+        // We order the data as lighting|other|meta|id.
+        char lighting, other, meta, id;
+    } BlockData;
 
     class Block{
     public:
@@ -64,10 +72,9 @@ namespace VOX_World{
         Biome biome;
         void generateDisplayedFaces();
         void convertCoordinates(float *x, float *y, float *z, bool toWorld = false);
-        void modifyMeta(float x, float y, float z, unsigned short newMeta, bool correctCoords = false);
         void setBlock(int x, int y, int z, int blockID);
-        unsigned short getBlock(int x, int y, int z, bool data = false);
-        unsigned short blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
+        BlockData* getBlock(int x, int y, int z);
+        BlockData* blocks[WORLD_HEIGHT][REGION_SIZE * REGION_SIZE];
         bool isInRegion(float x, float y, float z);
         bool checkSurroundingsIsVisible(float x, float y, float z);
         void render();
@@ -85,9 +92,9 @@ namespace VOX_World{
         ~World();
         void setPlayer(VOX_Mob::Player *player);
         Region* getRegion(float x, float y, float z);
-        Block getBlock(unsigned short identifier);
-        unsigned short getBlock(float x, float y, float z, bool data = true);
-        void setBlock(float x, float y, float z, unsigned short blockData);
+        Block getBlock(unsigned int identifier);
+        BlockData* getBlock(float x, float y, float z);
+        void setBlock(float x, float y, float z, unsigned int blockData);
         sf::Vector3f getCollision(sf::Vector3f start, sf::Vector3f end);
         Region* loadRegion(int x, int z);
         void pruneRegions();

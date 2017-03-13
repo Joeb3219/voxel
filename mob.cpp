@@ -2,7 +2,6 @@
 #include "mob.h"
 #include "math.h"
 #include "world.h"
-#include "renderable.h"
 #include "inventory.h"
 
 namespace VOX_Mob{
@@ -29,7 +28,7 @@ namespace VOX_Mob{
         // Now we hone into the vector to find a collision.
         for(int i = 0; i < steps; i ++){
             currentPos -= stepVector;
-            if(VOX_World::blocks[world->getBlock(currentPos.x, currentPos.y, currentPos.z, false)].solid){
+            if(IS_SOLID(currentPos.x, currentPos.y, currentPos.z)){
                 if(!adjacent) return currentPos;
                 return (currentPos + stepVector);
             }
@@ -38,6 +37,10 @@ namespace VOX_Mob{
     }
 
     void Player::update(){
+        VOX_World::Region *regionIn = world->getRegion(x, y, z);
+        if(regionIn != 0){
+            if(!regionIn->loaded) return; // Region isn't loaded, let's not do anything yet.
+        }
         tickCounter ++;
 
         float newY = y, newX = x, newZ = z;
@@ -49,8 +52,8 @@ namespace VOX_Mob{
         stepVector = (curr - goal) * (1.0f / numSteps);
         for(int i = 0; i < numSteps; i ++){
             curr -= stepVector;
-            if(VOX_World::blocks[world->getBlock(curr.x, curr.y + 1, curr.z, false)].solid == true ||
-                VOX_World::blocks[world->getBlock(curr.x, curr.y + 2, curr.z, false)].solid){
+            if(IS_SOLID(curr.x, curr.y + 1, curr.z) == true ||
+                IS_SOLID(curr.x, curr.y + 2, curr.z)){
                 curr += stepVector;
                 break;
             }
@@ -63,7 +66,7 @@ namespace VOX_Mob{
         if(newY < y){
             for(float j = y; j > newY; j -= 0.0125f){
                 y = j;
-                if(VOX_World::blocks[world->getBlock(x, j, z, false)].solid == true){
+                if(IS_SOLID(x, j, z) == true){
                     if(fabs(j - ((int)j)) < 0.0125f){
                         yVelocity = 0;
                         y = (float) ( y);
@@ -74,7 +77,7 @@ namespace VOX_Mob{
         }else{
             for(float j = y; j < newY; j += 0.0125f){
                 y = j;
-                if(VOX_World::blocks[world->getBlock(x, j + 2.5f, z, false)].solid == true){
+                if(IS_SOLID(x, j + 2.5f, z) == true){
                     yVelocity = 0;
                     y = (float) ((int) j);
                     break;
@@ -83,31 +86,26 @@ namespace VOX_Mob{
         }
 
         sf::Vector3f lookingAt = getLookingAt();
-        unsigned short id, meta, blockLookingAt;
+        VOX_World::BlockData *blockLookingAt = world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z);
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && tickCounter > 10){
-            blockLookingAt = world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, true);
-            id = blockLookingAt & 0xFF;
-            meta = (blockLookingAt & 0xFF00) >> 8;
-            if(id != 0 && meta != 0xFF){
-                if(meta == 0){
+            blockLookingAt = world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z);
+            if(blockLookingAt->id != 0 && blockLookingAt->meta != 0xFF){
+                if(blockLookingAt->meta == 0){
                     tickCounter = 0;
-                    inventory->addItem(VOX_World::blocks[id].drops, 1);
+                    inventory->addItem(VOX_World::blocks[(int)blockLookingAt->id].drops, 1);
                     world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, VOX_Inventory::BlockIds::AIR);
                     unsigned int hand = inventory->getSelectedSlot(false);
                     if(VOX_Inventory::isTool(hand)){
                         inventory->setContents(inventory->selectedSlot, ((hand & 0x00FFF000) - 0x00001000) | (hand & 0x00000FFF), 1);
                     }
                 }else{
-                    int blockDamage = inventory->getBreakSpeed(&VOX_World::blocks[id]);
-                    if(meta < blockDamage) meta = 0;
-                    else meta -= blockDamage;
-                    world->getRegion(lookingAt.x, lookingAt.y, lookingAt.z)->modifyMeta(
-                        lookingAt.x, lookingAt.y, lookingAt.z, meta);
-                    }
+                    int blockDamage = inventory->getBreakSpeed(&VOX_World::blocks[(int)blockLookingAt->id]);
+                    if(blockLookingAt->meta < blockDamage) blockLookingAt->meta = 0;
+                    else blockLookingAt->meta -= blockDamage;
+                }
             }
-        }
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
-            if(world->getBlock(lookingAt.x, lookingAt.y, lookingAt.z, false) != VOX_Inventory::BlockIds::AIR){
+        }else if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && tickCounter > 35){
+            if(blockLookingAt->id != VOX_Inventory::BlockIds::AIR){
                 if(inventory->getSelectedSlot(false) != NULL_ITEM && VOX_Inventory::isBlock(inventory->getSelectedSlot(false))){
                     tickCounter = 0;
                     lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
@@ -163,57 +161,7 @@ namespace VOX_Mob{
     }
 
     void Player::renderInventory(float width){
-        float blockSize = 48.0f, border = 3.0f, increment = 1.0 / 32.0f;
-        float bottomLeftY = 28.0 * increment, bottomLeftX = 0.0;
-        float inventoryWidth = (blockSize*9) + border, inventoryHeight = blockSize;
-        float x = (width - inventoryWidth) / 2.0f, y = 0.0f, drawIncrement = 1.0 / 32.0f;
-        float *texCoords;
-        int item, quantity;
-
-        x += border;
-        y += border;
-        glPushAttrib(GL_CURRENT_BIT);
-
-        glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
-        for(int i = 0; i < 9; i ++){
-            item = inventory->getSlot(i, false) & 0x00000FFF;
-            quantity = inventory->getSlot(i, true) >> 24;
-
-            if(i == inventory->selectedSlot) bottomLeftX = drawIncrement;
-            else bottomLeftX = 0;
-
-            glEnable(GL_TEXTURE_2D);
-            glBegin(GL_QUADS);
-                glTexCoord2f(bottomLeftX, bottomLeftY); glVertex2f(x, y);
-                glTexCoord2f(bottomLeftX + increment, bottomLeftY); glVertex2f(x + blockSize, y);
-                glTexCoord2f(bottomLeftX + increment, bottomLeftY + increment); glVertex2f(x + blockSize, y + blockSize);
-                glTexCoord2f(bottomLeftX, bottomLeftY + increment); glVertex2f(x, y + blockSize);
-            glEnd();
-            glDisable(GL_TEXTURE_2D);
-
-
-            glEnable(GL_BLEND);
-            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                if(item != 0x00000FFF){
-                    if(VOX_Inventory::isBlock(item)) texCoords = VOX_World::blocks[item].texCoords;
-                    else texCoords = VOX_Inventory::items[item - ITEMS_BEGIN].texCoords;
-                    glEnable(GL_TEXTURE_2D);
-                    glBegin(GL_QUADS);
-                        glTexCoord2f(texCoords[1], texCoords[0]); glVertex2f(x + border, y + border);
-                        glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0]); glVertex2f(x + blockSize - border, y + border);
-                        glTexCoord2f(texCoords[1] + drawIncrement, texCoords[0] + drawIncrement); glVertex2f(x + blockSize - border, y + inventoryHeight - border);
-                        glTexCoord2f(texCoords[1], texCoords[0] + drawIncrement); glVertex2f(x + border, y + inventoryHeight - border);
-                    glEnd();
-                    glDisable(GL_TEXTURE_2D);
-                    VOX_Graphics::renderString(x + (blockSize * 1.0 / 2.0), y + blockSize - (blockSize * 6.0 / 7.0), std::to_string(quantity), sf::Vector3f(0.0f, 0.0f, 0.0f));
-                }
-            glDisable(GL_BLEND);
-
-            x += blockSize;
-        }
-
-
-        glPopAttrib();
+        inventory->render(width);
     }
 
     Player::~Player(){
@@ -225,7 +173,7 @@ namespace VOX_Mob{
         this->y = y;
         this->z = z;
         this->world = world;
-        this->inventory = new VOX_Inventory::Inventory(40);
+        this->inventory = new VOX_Inventory::PlayerInventory(40);
         inventory->setContents(0, VOX_Inventory::getItemWithDefaultMeta(2048), 1);
     }
 
