@@ -12,6 +12,7 @@
 #define REGIONS_FROM_PLAYER_RENDER 2
 #define REGIONS_FROM_PLAYER_UNLOAD 3
 #define NUM_FLOATS_PER_FACE 32
+#define TYPICAL_CAVE_WIDTH 2
 
 #define IS_SOLID(x, y, z) VOX_World::blocks[(int)world->getBlock(x, y, z)->id].solid
 #define BLOCK_NAME(x, y, z) VOX_World::blocks[(int)world->getBlock(x, y, z)->id].name
@@ -96,7 +97,7 @@ namespace VOX_World{
         std::unordered_map<std::string, Region*> *regionMap;
     public:
         int facesRendered = 0;
-        FastNoise *height, *moisture, *density;
+        FastNoise *height, *moisture, *density, *cave, *coherent;
         World(int seed = 0);
         ~World();
         void radiateLight(int x, int y, int z, int level);

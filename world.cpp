@@ -21,14 +21,13 @@ namespace VOX_World{
     BlockData *NULL_BLOCK = new BlockData();
 
     void Region::loadRegionFromMemory(FILE *file){
-        int numCharactersInFile = 65536 * 2, i =0;
+        int numCharactersInFile = 98304, i =0;
         char contents[numCharactersInFile + 1];
         fread(&contents, sizeof(char), numCharactersInFile, file);
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     BlockData *block = new BlockData();
-                    block->lighting_top = contents[i++];
                     block->other = contents[i++];
                     block->meta = contents[i++];
                     block->id = contents[i++];
@@ -117,6 +116,34 @@ namespace VOX_World{
                 }
             }
         }
+
+        // CAVE GENERATION
+        // We use a perlin function and determine if the abs(perlin(x,y,z)) is below a threshold.
+        // If it is, we apply coherent noise to generate a width of the tunnel to dig out.
+        for(int x = 0; x < REGION_SIZE; x ++){
+            for(int z = 0; z < REGION_SIZE; z ++){
+                int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
+                for(int y = 4; y < totalHeight + 2; y ++){
+                    float noise = VOX_Math::convertScale(world->cave->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, 0.0f, 1.0f);
+                    float levelRelativeToTotalHeight = 1.0f - ((y * 1.0f) / totalHeight);
+                    float acceptableNoiseLevel = VOX_Math::convertScale(levelRelativeToTotalHeight, 0.0f, 1.0f, 0.13f, .25f);
+                    if(noise <= acceptableNoiseLevel){
+                        float coherentNoise = VOX_Math::convertScale(world->coherent->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, 0.0f, 1.0f);
+                        coherentNoise = ((coherentNoise) * TYPICAL_CAVE_WIDTH) + TYPICAL_CAVE_WIDTH;
+                        for(int xP = x - (coherentNoise / 2); xP <= x + (coherentNoise / 2); xP ++){
+                            if(xP < 0 || xP >= REGION_SIZE) continue;
+                            for(int zP = z - (coherentNoise / 2); zP <= z + (coherentNoise / 2); zP ++){
+                                if(zP < 0 || zP >= REGION_SIZE) continue;
+                                for(int yP = y - (coherentNoise / 2); yP <= y + (coherentNoise / 2); yP ++){
+                                    if(yP < 0 || yP >= WORLD_HEIGHT - 1) continue;
+                                    setBlock(xP, yP, zP, VOX_Inventory::BlockIds::AIR);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         loaded = true;
         this->needsUpdate = this->updatingMesh = true;
     }
@@ -162,7 +189,6 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     block = blocks[y][x*REGION_SIZE + z];
-                    fputc(block->lighting, file);
                     fputc(block->other, file);
                     fputc(block->meta, file);
                     fputc(block->id, file);
@@ -601,6 +627,16 @@ namespace VOX_World{
         density->SetSeed(seed / 3);
         density->SetFrequency(0.5f);
         density->SetFractalOctaves(4);
+        cave = new FastNoise();
+        cave->SetNoiseType(FastNoise::SimplexFractal);
+        cave->SetSeed(seed * 3);
+        cave->SetFrequency(0.5f);
+        cave->SetFractalOctaves(4);
+        coherent = new FastNoise();
+        coherent->SetNoiseType(FastNoise::CubicFractal);
+        coherent->SetSeed(seed / 5);
+        coherent->SetFrequency(0.5f);
+        coherent->SetFractalOctaves(4);
         for(int x = 0; x < 3; x ++){
             for(int z = 0; z < 3; z ++){
                 std::string regionName = std::to_string(x - 1) + std::string(":") + std::to_string(z - 1);
