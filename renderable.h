@@ -24,7 +24,7 @@ namespace VOX_Graphics{
     public:
         static Cube &getInstance();
         void render(float x, float y, float z, float *texCoords);
-        float* renderFace(float x, float y, float z, Face face, float *texCoords);
+        float* renderFace(float x, float y, float z, Face face, float *texCoords, unsigned char lightLevel);
     };
 
     void renderString(int x, int y, std::string str, sf::Vector3f color = sf::Vector3f(1.0f, 1.0f, 1.0f));

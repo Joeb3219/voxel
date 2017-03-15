@@ -175,6 +175,7 @@ namespace VOX_Mob{
         this->world = world;
         this->inventory = new VOX_Inventory::PlayerInventory(40);
         inventory->setContents(0, VOX_Inventory::getItemWithDefaultMeta(2048), 1);
+        inventory->setContents(1, VOX_Inventory::BlockIds::LIGHTSTONE, 32);
     }
 
 }

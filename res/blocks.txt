@@ -7,6 +7,16 @@
         <solid>false</solid>
     </air>
 
+    <lightStone>
+        <name>LightStone</name>
+        <id>12</id>
+        <texture>1:2,1:2,1:2,1:2,1:2,1:2</texture>
+        <visible>true</visible>
+        <solid>true</solid>
+        <damage>70</damage>
+        <light>8</light>
+    </lightStone>
+
     <coal>
         <name>Coal</name>
         <id>9</id>

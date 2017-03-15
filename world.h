@@ -1,16 +1,17 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Window.hpp>
 #include <string>
+#include <set>
 #include <unordered_map>
 #include "lib/fastNoise/FastNoise.h"
 
 #define WORLD_HEIGHT 128
-#define REGION_SIZE 16
+#define REGION_SIZE 8
 #define TYPICAL_GROUND 48
 #define REGIONS_FROM_PLAYER_LOAD 2
 #define REGIONS_FROM_PLAYER_RENDER 2
 #define REGIONS_FROM_PLAYER_UNLOAD 3
-#define NUM_FLOATS_PER_FACE 20
+#define NUM_FLOATS_PER_FACE 32
 
 #define IS_SOLID(x, y, z) VOX_World::blocks[(int)world->getBlock(x, y, z)->id].solid
 #define BLOCK_NAME(x, y, z) VOX_World::blocks[(int)world->getBlock(x, y, z)->id].name
@@ -31,20 +32,27 @@ namespace VOX_World{
 
     class World;
 
+    enum Light_Spread{ORIGIN, LEFT, RIGHT, UP, DOWN, FRONT, BACK};
+
     enum Biome{GRASSLAND};
 
     Biome getBiome(double elevation, double moisture);
 
     typedef struct BlockData{
-        // We order the data as lighting|other|meta|id.
-        char lighting, other, meta, id;
+        union{
+            unsigned long long lighting = 0;
+            struct{
+                unsigned char lighting_top, lighting_bottom, lighting_left, lighting_right, lighting_front, lighting_back;
+            };
+        };
+        unsigned char other = 0, meta = 0, id = 0;
     } BlockData;
 
     class Block{
     public:
         Block(VOX_FileIO::Tree *tree, std::string blockPath);
         Block();
-        int id = -1, meta = 0, drops, damage;
+        int id = -1, meta = 0, drops, damage, light;
         std::string name;
         bool visible = false, solid = false;
         float texCoords[12] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
@@ -70,6 +78,7 @@ namespace VOX_World{
         Region();
         ~Region();
         Biome biome;
+        int getFirstAirLightBlock(int x, int z);
         void generateDisplayedFaces();
         void convertCoordinates(float *x, float *y, float *z, bool toWorld = false);
         void setBlock(int x, int y, int z, int blockID);
@@ -90,6 +99,7 @@ namespace VOX_World{
         FastNoise *height, *moisture, *density;
         World(int seed = 0);
         ~World();
+        void radiateLight(int x, int y, int z, int level);
         void setPlayer(VOX_Mob::Player *player);
         Region* getRegion(float x, float y, float z);
         Block getBlock(unsigned int identifier);

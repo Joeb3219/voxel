@@ -2,8 +2,10 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <list>
 #include <mutex>
 #include <unordered_map>
+#include <algorithm>
 #include "world.h"
 #include "mob.h"
 #include "math.h"
@@ -26,7 +28,7 @@ namespace VOX_World{
             for(int z = 0; z < REGION_SIZE; z ++){
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     BlockData *block = new BlockData();
-                    block->lighting = contents[i++];
+                    block->lighting_top = contents[i++];
                     block->other = contents[i++];
                     block->meta = contents[i++];
                     block->id = contents[i++];
@@ -62,7 +64,12 @@ namespace VOX_World{
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     float currentDensity = VOX_Math::convertScale(world->density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
                     if(y >= totalHeight || currentDensity <= 0.04f){
-                        setBlock(x, y, z, VOX_Inventory::BlockIds::AIR);
+                        BlockData *blockData = new BlockData();
+                        blockData->lighting = 15;
+                        blockData->other = 0;
+                        blockData->meta = 0;
+                        blockData->id = VOX_Inventory::BlockIds::AIR;
+                        blocks[y][x*REGION_SIZE + z] = blockData;
                         continue;
                     }
                     if(y >= TYPICAL_GROUND){
@@ -112,6 +119,17 @@ namespace VOX_World{
         }
         loaded = true;
         this->needsUpdate = this->updatingMesh = true;
+    }
+
+    int Region::getFirstAirLightBlock(int x, int z){
+        BlockData *data;
+        for(int y = WORLD_HEIGHT - 2; y > 0; y --){
+            data = blocks[y][x*REGION_SIZE + z];
+            if(data != 0 &&
+                data != NULL_BLOCK &&
+                data->id != 0) return y + 1;
+        }
+        return 0;
     }
 
     Region::Region(){}
@@ -200,26 +218,27 @@ namespace VOX_World{
                     yPrime = y;
                     zPrime = z;
                     convertCoordinates(&xPrime, &yPrime, &zPrime, true);
-                    Block block = VOX_World::blocks[(int)getBlock(x, y, z)->id];
+                    BlockData *blockData = getBlock(x, y, z);
+                    Block block = VOX_World::blocks[(int)blockData->id];
                     if(!block.visible) continue;
                     texCoords = &block.texCoords[0];
                     if(!checkSurroundingsIsVisible(xPrime, yPrime + 1, zPrime)){
-                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords));
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_TOP, texCoords, blockData->lighting_top));
                     }
                     if(!checkSurroundingsIsVisible(xPrime, yPrime - 1, zPrime)){
-                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords));
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BOTTOM, texCoords, blockData->lighting_bottom));
                     }
                     if(!checkSurroundingsIsVisible(xPrime + 1, yPrime, zPrime)){
-                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords));
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_RIGHT, texCoords, blockData->lighting_right));
                     }
                     if(!checkSurroundingsIsVisible(xPrime - 1, yPrime, zPrime)){
-                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords));
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_LEFT, texCoords, blockData->lighting_left));
                     }
                     if(!checkSurroundingsIsVisible(xPrime, yPrime, zPrime + 1)){
-                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords));
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_FRONT, texCoords, blockData->lighting_front));
                     }
                     if(!checkSurroundingsIsVisible(xPrime, yPrime, zPrime - 1)){
-                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords));
+                        faces.push_back(cube.renderFace(xPrime, yPrime, zPrime, VOX_Graphics::Face::FACE_BACK, texCoords, blockData->lighting_back));
                     }
 
                 }
@@ -251,12 +270,33 @@ namespace VOX_World{
     void Region::update(){
         if(!loaded) return; // We aren't loaded, how could we be updating?
         if(needsUpdate){
+            BlockData *data;
             for(int x = 0; x < REGION_SIZE; x ++){
-                for(int y = 0; y < WORLD_HEIGHT; y ++){
-                    for(int z = 0; z < REGION_SIZE; z ++){
-                        BlockData *block = getBlock(x, y, z);
-                        if(block->id == VOX_Inventory::BlockIds::GRASS){
-                            if(VOX_World::blocks[(int)getBlock(x, y + 1, z)->id].visible == true) block->id = VOX_Inventory::BlockIds::DIRT;
+                for(int z = 0; z < REGION_SIZE; z ++){
+                    for(int y = 0; y < WORLD_HEIGHT; y ++){
+                        data = blocks[y][x * REGION_SIZE + z];
+                        data->lighting_back = data->lighting_top = data->lighting_bottom = data->lighting_front = data->lighting_left = data->lighting_right = VOX_World::blocks[(int) data->id].light;
+                    }
+                }
+            }
+            for(int x = 0; x < REGION_SIZE; x ++){
+                for(int z = 0; z < REGION_SIZE; z ++){
+                    //int firstAirLight = getFirstAirLightBlock(x, z);
+                    //for(int y = firstAirLight; y < WORLD_HEIGHT; y ++){
+                    //    data = blocks[y][x*REGION_SIZE + z];
+                    //    if(VOX_World::blocks[(int)getBlock(x, y + 1, z)->id].visible == true) data->id = VOX_Inventory::BlockIds::DIRT;
+                    //    if(data->id == VOX_Inventory::BlockIds::AIR) world->radiateLight(x, y, z, 15, ORIGIN);
+                    //    if(VOX_World::blocks[(int) data->id].light > 0) world->radiateLight(x, y, z, VOX_World::blocks[(int) data->id].light, ORIGIN);
+                    //}
+                    for(int y = 0; y < WORLD_HEIGHT - 1; y ++){
+                        data = blocks[y][x * REGION_SIZE + z];
+                        if(data->id == VOX_Inventory::BlockIds::GRASS && VOX_World::blocks[(int)getBlock(x, y + 1, z)->id].solid) data->id = VOX_Inventory::BlockIds::DIRT;
+                        if(VOX_World::blocks[(int) data->id].light > 0){
+                            float xP = x, yP = y, zP = z;
+                            convertCoordinates(&xP, &yP, &zP, true);
+                            std::cout << "Propogating a light source about " << xP << ", " << yP << ", " << zP << " with level " << VOX_World::blocks[(int) data->id].light << std::endl;
+                            data->lighting_back = data->lighting_top = data->lighting_bottom = data->lighting_front = data->lighting_left = data->lighting_right = VOX_World::blocks[(int) data->id].light;
+                            world->radiateLight((int) xP, (int) yP, (int) zP, VOX_World::blocks[(int) data->id].light);
                         }
                     }
                 }
@@ -274,14 +314,18 @@ namespace VOX_World{
 
     void Region::render(){
         glPushMatrix();
-        //if(DL_ID != 0) glCallList(DL_ID);
         if(vertexArray != 0){
+            // Strategy: Store a color3f for every vertex which describes the light on a scale of 0-15.
+            // Color is 1.0-(1.0*(15-(15-i))). IE: 15 light -> 1.0 color, 0 light = 0 color.
             glBindTexture(GL_TEXTURE_2D, VOX_Graphics::textureAtlas);
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(3, GL_FLOAT, (3 + 2 + 3) * 4, vertexArray);
             glEnableClientState(GL_VERTEX_ARRAY);
-            glVertexPointer(3, GL_FLOAT, (3 + 2) * 4, vertexArray);
+            glVertexPointer(3, GL_FLOAT, (3 + 2 + 3) * 4, vertexArray + 3);
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer(2, GL_FLOAT, (3 + 2) * 4, vertexArray + 3);
+            glTexCoordPointer(2, GL_FLOAT, (3 + 2 + 3) * 4, vertexArray + 6);
             glDrawArrays(GL_QUADS, 0, numFacesDrawn * 4);
+            glDisableClientState(GL_COLOR_ARRAY);
             glDisableClientState(GL_VERTEX_ARRAY);
             glDisableClientState(GL_TEXTURE_COORD_ARRAY);
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -295,7 +339,7 @@ namespace VOX_World{
     }
 
     Block::Block(VOX_FileIO::Tree *tree, std::string blockPath){
-        std::string string_id, string_name, string_visible, string_solid, string_damage, string_drops;
+        std::string string_id, string_name, string_visible, string_solid, string_damage, string_drops, string_light;
         std::string string_texture;
         string_id = tree->search(blockPath + ":id");
         string_name = tree->search(blockPath + ":name");
@@ -304,6 +348,7 @@ namespace VOX_World{
         string_texture = tree->search(blockPath + ":texture");
         string_damage = tree->search(blockPath + ":damage");
         string_drops = tree->search(blockPath + ":drops");
+        string_light = tree->search(blockPath + ":light");
 
         if(!string_id.empty()) id = atoi(string_id.c_str());
         if(!string_name.empty()) name = string_name;
@@ -315,6 +360,8 @@ namespace VOX_World{
         else damage = 0xFF;
         if(!string_drops.empty()) drops = atoi(string_drops.c_str());
         else drops = id;
+        if(!string_light.empty()) light = atoi(string_light.c_str());
+        else light = 0;
 
         if(!string_texture.empty()){
             std::string currNum("");
@@ -337,6 +384,81 @@ namespace VOX_World{
 
     Biome getBiome(double elevation, double moisture){
         return GRASSLAND;
+    }
+
+    void World::radiateLight(int x, int y, int z, int level){
+        std::list<sf::Vector3f> queue, visited, discoveredNodes;
+        std::vector<Region*> regionsAffected;
+        Region *r;
+
+        queue.push_back(sf::Vector3f(x, y, z));
+
+        while(level > 0){
+            level --; // We are now operating on one light level less than before (ie: the source is brighter than the next block).
+            while(!queue.empty()){
+                sf::Vector3f node = queue.front();
+                sf::Vector3f up = sf::Vector3f(node.x, node.y + 1, node.z), down = sf::Vector3f(node.x, node.y - 1, node.z),
+                    left = sf::Vector3f(node.x - 1, node.y, node.z), right = sf::Vector3f(node.x + 1, node.y, node.z),
+                    front = sf::Vector3f(node.x, node.y, node.z + 1), back = sf::Vector3f(node.x, y, node.z - 1);
+
+                queue.pop_front();
+                visited.push_back(node);
+
+                BlockData *block;
+
+                block = getBlock(up.x, up.y, up.z);
+                block->lighting_bottom = (unsigned char) std::max((int) block->lighting_bottom, level);
+                if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), up) == visited.end()) discoveredNodes.push_back(up);
+
+                block = getBlock(down.x, down.y, down.z);
+                block->lighting_top = (unsigned char) std::max((int) block->lighting_top, level);
+                if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), down) == visited.end()) discoveredNodes.push_back(down);
+
+                block = getBlock(left.x, left.y, left.z);
+                block->lighting_right = (unsigned char) std::max((int) block->lighting_right, level);
+                if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), left) == visited.end()){
+                    discoveredNodes.push_back(left);
+                    r = getRegion(left.x, left.y, left.z);
+                    if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                }
+
+                block = getBlock(right.x, right.y, right.z);
+                block->lighting_left = (unsigned char) std::max((int) block->lighting_left, level);
+                if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), right) == visited.end()){
+                    discoveredNodes.push_back(right);
+                    r = getRegion(right.x, right.y, right.z);
+                    if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                }
+
+                block = getBlock(front.x, front.y, front.z);
+                block->lighting_back = (unsigned char) std::max((int) block->lighting_back, level);
+                if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), front) == visited.end()){
+                        discoveredNodes.push_back(front);
+                        r = getRegion(front.x, front.y, front.z);
+                        if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                }
+
+                block = getBlock(back.x, back.y, back.z);
+                block->lighting_front = (unsigned char) std::max((int) block->lighting_front, level);
+                if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), back) == visited.end()){
+                        discoveredNodes.push_back(back);
+                        r = getRegion(back.x, back.y, back.z);
+                        if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                }
+            }
+
+            while(!discoveredNodes.empty()){
+                sf::Vector3f node = discoveredNodes.front();
+                discoveredNodes.pop_front();
+                if(std::find(queue.begin(), queue.end(), node) == queue.end()) queue.push_back(node);
+            }
+        }
+
+        Region *currentlyIn = getRegion(x, y, z);
+        for(unsigned int i = 0; i < regionsAffected.size(); i ++){
+            r = regionsAffected.at(i);
+            if(r != currentlyIn && r->loaded) r->updatingMesh = true;
+        }
     }
 
     void World::update(){
