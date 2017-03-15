@@ -307,14 +307,7 @@ namespace VOX_World{
             }
             for(int x = 0; x < REGION_SIZE; x ++){
                 for(int z = 0; z < REGION_SIZE; z ++){
-                    //int firstAirLight = getFirstAirLightBlock(x, z);
-                    //for(int y = firstAirLight; y < WORLD_HEIGHT; y ++){
-                    //    data = blocks[y][x*REGION_SIZE + z];
-                    //    if(VOX_World::blocks[(int)getBlock(x, y + 1, z)->id].visible == true) data->id = VOX_Inventory::BlockIds::DIRT;
-                    //    if(data->id == VOX_Inventory::BlockIds::AIR) world->radiateLight(x, y, z, 15, ORIGIN);
-                    //    if(VOX_World::blocks[(int) data->id].light > 0) world->radiateLight(x, y, z, VOX_World::blocks[(int) data->id].light, ORIGIN);
-                    //}
-                    for(int y = 0; y < WORLD_HEIGHT - 1; y ++){
+                    for(int y = 0; y < WORLD_HEIGHT; y ++){
                         data = blocks[y][x * REGION_SIZE + z];
                         if(data->id == VOX_Inventory::BlockIds::GRASS && VOX_World::blocks[(int)getBlock(x, y + 1, z)->id].solid) data->id = VOX_Inventory::BlockIds::DIRT;
                         if(VOX_World::blocks[(int) data->id].light > 0){
@@ -322,7 +315,8 @@ namespace VOX_World{
                             convertCoordinates(&xP, &yP, &zP, true);
                             std::cout << "Propogating a light source about " << xP << ", " << yP << ", " << zP << " with level " << VOX_World::blocks[(int) data->id].light << std::endl;
                             data->lighting_back = data->lighting_top = data->lighting_bottom = data->lighting_front = data->lighting_left = data->lighting_right = VOX_World::blocks[(int) data->id].light;
-                            world->radiateLight((int) xP, (int) yP, (int) zP, VOX_World::blocks[(int) data->id].light);
+                            std::thread thread_radiatingLight(&World::radiateLight, world, (int) xP, (int) yP, (int) zP, VOX_World::blocks[(int) data->id].light, true);
+                            thread_radiatingLight.detach();
                         }
                     }
                 }
@@ -412,7 +406,7 @@ namespace VOX_World{
         return GRASSLAND;
     }
 
-    void World::radiateLight(int x, int y, int z, int level){
+    void World::radiateLight(int x, int y, int z, int level, bool updateNeighboringRegions){
         std::list<sf::Vector3f> queue, visited, discoveredNodes;
         std::vector<Region*> regionsAffected;
         Region *r;
@@ -444,32 +438,40 @@ namespace VOX_World{
                 block->lighting_right = (unsigned char) std::max((int) block->lighting_right, level);
                 if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), left) == visited.end()){
                     discoveredNodes.push_back(left);
-                    r = getRegion(left.x, left.y, left.z);
-                    if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                    if(updateNeighboringRegions){
+                        r = getRegion(left.x, left.y, left.z);
+                        if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                    }
                 }
 
                 block = getBlock(right.x, right.y, right.z);
                 block->lighting_left = (unsigned char) std::max((int) block->lighting_left, level);
                 if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), right) == visited.end()){
                     discoveredNodes.push_back(right);
-                    r = getRegion(right.x, right.y, right.z);
-                    if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                    if(updateNeighboringRegions){
+                        r = getRegion(right.x, right.y, right.z);
+                        if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                    }
                 }
 
                 block = getBlock(front.x, front.y, front.z);
                 block->lighting_back = (unsigned char) std::max((int) block->lighting_back, level);
                 if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), front) == visited.end()){
                         discoveredNodes.push_back(front);
-                        r = getRegion(front.x, front.y, front.z);
-                        if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                        if(updateNeighboringRegions){
+                            r = getRegion(front.x, front.y, front.z);
+                            if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                        }
                 }
 
                 block = getBlock(back.x, back.y, back.z);
                 block->lighting_front = (unsigned char) std::max((int) block->lighting_front, level);
                 if(!blocks[(int) block->id].solid && std::find(visited.begin(), visited.end(), back) == visited.end()){
                         discoveredNodes.push_back(back);
-                        r = getRegion(back.x, back.y, back.z);
-                        if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                        if(updateNeighboringRegions){
+                            r = getRegion(back.x, back.y, back.z);
+                            if(std::find(regionsAffected.begin(), regionsAffected.end(), r) == regionsAffected.end()) regionsAffected.push_back(r);
+                        }
                 }
             }
 
@@ -480,10 +482,12 @@ namespace VOX_World{
             }
         }
 
-        Region *currentlyIn = getRegion(x, y, z);
-        for(unsigned int i = 0; i < regionsAffected.size(); i ++){
-            r = regionsAffected.at(i);
-            if(r != currentlyIn && r->loaded) r->updatingMesh = true;
+        if(updateNeighboringRegions){
+            Region *currentlyIn = getRegion(x, y, z);
+            for(unsigned int i = 0; i < regionsAffected.size(); i ++){
+                r = regionsAffected.at(i);
+                if(r != 0 && r != currentlyIn && r->loaded) r->updatingMesh = true;
+            }
         }
     }
 

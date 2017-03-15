@@ -8,9 +8,9 @@
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 8
 #define TYPICAL_GROUND 48
-#define REGIONS_FROM_PLAYER_LOAD 2
-#define REGIONS_FROM_PLAYER_RENDER 2
-#define REGIONS_FROM_PLAYER_UNLOAD 3
+#define REGIONS_FROM_PLAYER_LOAD 3
+#define REGIONS_FROM_PLAYER_RENDER 3
+#define REGIONS_FROM_PLAYER_UNLOAD 6
 #define NUM_FLOATS_PER_FACE 32
 #define TYPICAL_CAVE_WIDTH 2
 
@@ -100,7 +100,7 @@ namespace VOX_World{
         FastNoise *height, *moisture, *density, *cave, *coherent;
         World(int seed = 0);
         ~World();
-        void radiateLight(int x, int y, int z, int level);
+        void radiateLight(int x, int y, int z, int level, bool updateNeighboringRegions = true);
         void setPlayer(VOX_Mob::Player *player);
         Region* getRegion(float x, float y, float z);
         Block getBlock(unsigned int identifier);

@@ -8,13 +8,13 @@
     </air>
 
     <lightStone>
-        <name>LightStone</name>
+        <name>Light Stone</name>
         <id>12</id>
         <texture>1:2,1:2,1:2,1:2,1:2,1:2</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>70</damage>
-        <light>8</light>
+        <damage>60</damage>
+        <light>7</light>
     </lightStone>
 
     <coal>
@@ -23,7 +23,7 @@
         <texture>2:2,2:2,2:2,2:2,2:2,2:2</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>30</damage>
+        <damage>90</damage>
     </coal>
 
     <diamond>
@@ -32,7 +32,7 @@
         <texture>2:3,2:3,2:3,2:3,2:3,2:3</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>50</damage>
+        <damage>250</damage>
     </diamond>
 
     <dirt>
@@ -41,7 +41,7 @@
         <texture>0:2,0:2,0:2,0:2,0:2,0:2</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>15</damage>
+        <damage>35</damage>
     </dirt>
 
     <gold>
@@ -50,7 +50,7 @@
         <texture>2:0,2:0,2:0,2:0,2:0,2:0</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>40</damage>
+        <damage>190</damage>
     </gold>
 
     <grass>
@@ -59,7 +59,7 @@
         <texture>0:1,0:1,0:1,0:1,0:0,0:2</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>16</damage>
+        <damage>35</damage>
         <drops>2</drops>
     </grass>
 
@@ -69,7 +69,7 @@
         <texture>0:5,0:5,0:5,0:5,0:5,0:5</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>16</damage>
+        <damage>25</damage>
     </gravel>
 
     <iron>
@@ -78,7 +78,7 @@
         <texture>2:1,2:1,2:1,2:1,2:1,2:1</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>40</damage>
+        <damage>163</damage>
     </iron>
 
     <redstone>
@@ -87,7 +87,7 @@
         <texture>2:4,2:4,2:4,2:4,2:4,2:4</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>40</damage>
+        <damage>180</damage>
     </redstone>
 
     <sand>
@@ -96,7 +96,7 @@
         <texture>0:4,0:4,0:4,0:4,0:4,0:4</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>16</damage>
+        <damage>34</damage>
     </sand>
 
     <stone>
@@ -105,7 +105,7 @@
         <texture>0:3,0:3,0:3,0:3,0:3,0:3</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>30</damage>
+        <damage>90</damage>
     </stone>
 
     <wood>
@@ -114,7 +114,7 @@
         <texture>1:0,1:0,1:0,1:0,1:1,1:1</texture>
         <visible>true</visible>
         <solid>true</solid>
-        <damage>30</damage>
+        <damage>85</damage>
     </wood>
 
 </blocks>

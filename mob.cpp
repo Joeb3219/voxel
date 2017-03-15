@@ -109,8 +109,10 @@ namespace VOX_Mob{
                 if(inventory->getSelectedSlot(false) != NULL_ITEM && VOX_Inventory::isBlock(inventory->getSelectedSlot(false))){
                     tickCounter = 0;
                     lookingAt = getLookingAt(true); // Recompute the looking at to get the adjacent block.
-                    world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, inventory->getSelectedSlot(false));
-                    inventory->modifySlot(inventory->selectedSlot, -1);
+                    if(!((int) lookingAt.x == (int) x && ((int) lookingAt.y == (int) y + 2 || (int) lookingAt.y == (int) y + 1) && (int) lookingAt.z == (int) z)){
+                        world->setBlock(lookingAt.x, lookingAt.y, lookingAt.z, inventory->getSelectedSlot(false));
+                        inventory->modifySlot(inventory->selectedSlot, -1);
+                    }
                 }
             }
         }
