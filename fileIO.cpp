@@ -27,6 +27,24 @@ namespace VOX_FileIO{
         return blocks;
     }
 
+    VOX_World::Biome* initBiomes(){
+        VOX_FileIO::Tree biomeData(fopen("res/biomes.txt", "r"));
+        VOX_FileIO::Tree_Node *biomesNode = biomeData.fetchNode("biomes");
+        VOX_World::Biome* biomes = new VOX_World::Biome[biomesNode->children.size()];
+        std::string biomeLabel, biomeID;
+        for(unsigned int i = 0; i < biomesNode->children.size(); i ++){
+            VOX_World::Biome biome();
+            biomeLabel = biomesNode->children.at(i)->label;
+            biomeID = biomeData.search("biomes:" + biomeLabel + ":id");
+            if(biomeID.empty()){
+                std::cout << "Malformed biome data: " << biomeLabel << std::endl;
+                continue;
+            }
+            biomes[atoi(biomeID.c_str())] = VOX_World::Biome(&biomeData, "biomes:" + biomeLabel);
+        }
+        return biomes;
+    }
+
     VOX_Inventory::Item* initItems(){
         VOX_FileIO::Tree itemData(fopen("res/items.txt", "r"));
         VOX_FileIO::Tree_Node *itemsNode = itemData.fetchNode("items");

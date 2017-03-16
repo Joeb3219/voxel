@@ -11,6 +11,7 @@ namespace VOX_World{
     class Region;
     class World;
     class Block;
+    class Biome;
 }
 
 namespace VOX_Inventory{
@@ -25,6 +26,7 @@ namespace VOX_FileIO{
     VOX_World::Region* loadRegion(VOX_World::World *world, int x, int z);
     VOX_Inventory::Item* initItems();
     VOX_World::Block* initBlocks();
+    VOX_World::Biome* initBiomes();
 
     class Tree_Node{
     public:

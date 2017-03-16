@@ -8,8 +8,8 @@
 #define WORLD_HEIGHT 128
 #define REGION_SIZE 8
 #define TYPICAL_GROUND 48
-#define REGIONS_FROM_PLAYER_LOAD 3
-#define REGIONS_FROM_PLAYER_RENDER 3
+#define REGIONS_FROM_PLAYER_LOAD 2
+#define REGIONS_FROM_PLAYER_RENDER 2
 #define REGIONS_FROM_PLAYER_UNLOAD 6
 #define NUM_FLOATS_PER_FACE 32
 #define TYPICAL_CAVE_WIDTH 2
@@ -35,10 +35,6 @@ namespace VOX_World{
 
     enum Light_Spread{ORIGIN, LEFT, RIGHT, UP, DOWN, FRONT, BACK};
 
-    enum Biome{GRASSLAND};
-
-    Biome getBiome(double elevation, double moisture);
-
     typedef struct BlockData{
         union{
             unsigned long long lighting = 0;
@@ -59,7 +55,20 @@ namespace VOX_World{
         float texCoords[12] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
     };
 
+    class Biome{
+    public:
+        Biome();
+        Biome(VOX_FileIO::Tree *tree, std::string biomePath);
+        std::string name;
+        int id;
+        float elevation, moisture;
+        std::vector<sf::Vector2f*> elevationBlocks[WORLD_HEIGHT];
+        Block getBlock(World *world, int x, int y, int z, float density);
+    };
+
+    Biome getBiome(double elevation, double moisture);
     extern Block *blocks;
+    extern Biome *biomes;
 
     class Region{
     private:

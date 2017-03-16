@@ -18,7 +18,9 @@
 namespace VOX_World{
 
     Block *blocks;
+    Biome *biomes;
     BlockData *NULL_BLOCK = new BlockData();
+    BlockData *TEMP_BLOCK_DATA = new BlockData();
 
     void Region::loadRegionFromMemory(FILE *file){
         int numCharactersInFile = 98304, i =0;
@@ -59,91 +61,14 @@ namespace VOX_World{
         std::cout << "Moisture average " << moistureAverage << ", Elevation average: " << elevationAverage << std::endl;
         for(int x = 0; x < REGION_SIZE; x ++){
             for(int z = 0; z < REGION_SIZE; z ++){
-                int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
                 for(int y = 0; y < WORLD_HEIGHT; y ++){
                     float currentDensity = VOX_Math::convertScale(world->density->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, -0.05f, 1.0f);
-                    if(y >= totalHeight || currentDensity <= 0.04f){
-                        BlockData *blockData = new BlockData();
-                        blockData->lighting = 15;
-                        blockData->other = 0;
-                        blockData->meta = 0;
-                        blockData->id = VOX_Inventory::BlockIds::AIR;
-                        blocks[y][x*REGION_SIZE + z] = blockData;
-                        continue;
-                    }
-                    if(y >= TYPICAL_GROUND){
-                        if(currentDensity <= 0.75f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRASS);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::STONE);
-                    }else if(y >= 58){
-                        if(currentDensity <= 0.45f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRASS);
-                        else if(currentDensity <= 0.55f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRAVEL);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::STONE);
-                    }else if(y >= 50){
-                        if(currentDensity <= 0.15f) setBlock(x, y, z, VOX_Inventory::BlockIds::DIRT);
-                        else if(currentDensity <= 0.30f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRAVEL);
-                        else if(currentDensity <= 0.45f) setBlock(x, y, z, VOX_Inventory::BlockIds::COAL);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::STONE);
-                    }else if(y >= 40){
-                        if(currentDensity <= 0.09f) setBlock(x, y, z, VOX_Inventory::BlockIds::DIRT);
-                        else if(currentDensity <= 0.15f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRAVEL);
-                        else if(currentDensity <= 0.30f) setBlock(x, y, z, VOX_Inventory::BlockIds::COAL);
-                        else if(currentDensity <= 0.41f) setBlock(x, y, z, VOX_Inventory::BlockIds::IRON);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::STONE);
-                    }else if(y >= 30){
-                        if(currentDensity <= 0.10f) setBlock(x, y, z, VOX_Inventory::BlockIds::DIRT);
-                        else if(currentDensity <= 0.20f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRAVEL);
-                        else if(currentDensity <= 0.32f) setBlock(x, y, z, VOX_Inventory::BlockIds::COAL);
-                        else if(currentDensity <= 0.46f) setBlock(x, y, z, VOX_Inventory::BlockIds::IRON);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::STONE);
-                    }else if(y >= 16){
-                        if(currentDensity <= 0.12f) setBlock(x, y, z, VOX_Inventory::BlockIds::DIRT);
-                        else if(currentDensity <= 0.15f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRAVEL);
-                        else if(currentDensity <= 0.29f) setBlock(x, y, z, VOX_Inventory::BlockIds::COAL);
-                        else if(currentDensity <= 0.34f) setBlock(x, y, z, VOX_Inventory::BlockIds::GOLD);
-                        else if(currentDensity <= 0.40f) setBlock(x, y, z, VOX_Inventory::BlockIds::REDSTONE);
-                        else if(currentDensity <= 0.47f) setBlock(x, y, z, VOX_Inventory::BlockIds::IRON);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::STONE);
-                    }else{
-                        if(currentDensity <= 0.05) setBlock(x, y, z, VOX_Inventory::BlockIds::DIRT);
-                        else if(currentDensity <= 0.12f) setBlock(x, y, z, VOX_Inventory::BlockIds::GRAVEL);
-                        else if(currentDensity <= 0.16f) setBlock(x, y, z, VOX_Inventory::BlockIds::DIAMOND);
-                        else if(currentDensity <= 0.22f) setBlock(x, y, z, VOX_Inventory::BlockIds::GOLD);
-                        else if(currentDensity <= 0.24f) setBlock(x, y, z, VOX_Inventory::BlockIds::REDSTONE);
-                        else if(currentDensity <= 0.35f) setBlock(x, y, z, VOX_Inventory::BlockIds::COAL);
-                        else if(currentDensity <= 0.45f) setBlock(x, y, z, VOX_Inventory::BlockIds::IRON);
-                        else setBlock(x, y, z, VOX_Inventory::BlockIds::STONE);
-                    }
+                    Block b = biome.getBlock(world, x + this->xOffset, y, z + this->zOffset, currentDensity);
+                    setBlock(x, y, z, b.id);
                 }
             }
         }
 
-        // CAVE GENERATION
-        // We use a perlin function and determine if the abs(perlin(x,y,z)) is below a threshold.
-        // If it is, we apply coherent noise to generate a width of the tunnel to dig out.
-        for(int x = 0; x < REGION_SIZE; x ++){
-            for(int z = 0; z < REGION_SIZE; z ++){
-                int totalHeight = (heightMap[x*REGION_SIZE + z])*TYPICAL_GROUND + TYPICAL_GROUND;
-                for(int y = 4; y < totalHeight + 2; y ++){
-                    float noise = VOX_Math::convertScale(world->cave->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, 0.0f, 1.0f);
-                    float levelRelativeToTotalHeight = 1.0f - ((y * 1.0f) / totalHeight);
-                    float acceptableNoiseLevel = VOX_Math::convertScale(levelRelativeToTotalHeight, 0.0f, 1.0f, 0.13f, .25f);
-                    if(noise <= acceptableNoiseLevel){
-                        float coherentNoise = VOX_Math::convertScale(world->coherent->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, 0.0f, 1.0f);
-                        coherentNoise = ((coherentNoise) * TYPICAL_CAVE_WIDTH) + TYPICAL_CAVE_WIDTH;
-                        for(int xP = x - (coherentNoise / 2); xP <= x + (coherentNoise / 2); xP ++){
-                            if(xP < 0 || xP >= REGION_SIZE) continue;
-                            for(int zP = z - (coherentNoise / 2); zP <= z + (coherentNoise / 2); zP ++){
-                                if(zP < 0 || zP >= REGION_SIZE) continue;
-                                for(int yP = y - (coherentNoise / 2); yP <= y + (coherentNoise / 2); yP ++){
-                                    if(yP < 0 || yP >= WORLD_HEIGHT - 1) continue;
-                                    setBlock(xP, yP, zP, VOX_Inventory::BlockIds::AIR);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
         loaded = true;
         this->needsUpdate = this->updatingMesh = true;
     }
@@ -288,8 +213,15 @@ namespace VOX_World{
         if(isInRegion(x, y, z)){
             convertCoordinates(&x, &y, &z);
             return VOX_World::blocks[(int)getBlock(x, y, z)->id].visible;
+        }else{
+            BlockData *block = world->getBlock(x, y, z);
+            if(block == NULL_BLOCK){
+                Block possibleBlock = biome.getBlock(world, x, y, z, VOX_Math::convertScale(world->density->GetNoise(x, y, z), -1.0f, 1.0f, -0.05f, 1.0f));
+                return possibleBlock.visible;
+            }else{
+                return VOX_World::blocks[(int)block->id].visible;
+            }
         }
-        else return VOX_World::blocks[(int)world->getBlock(x, y, z)->id].visible;
         return false;
     }
 
@@ -354,6 +286,99 @@ namespace VOX_World{
         glPopMatrix();
     }
 
+    Biome::Biome(){}
+
+    Biome::Biome(VOX_FileIO::Tree *tree, std::string biomePath){
+        std::string string_id, string_name, string_moisture, string_elevation;
+        string_id = tree->search(biomePath + ":id");
+        string_name = tree->search(biomePath + ":name");
+        string_moisture = tree->search(biomePath + ":moisture");
+        string_elevation = tree->search(biomePath + ":elevation");
+
+        VOX_FileIO::Tree_Node *elevationData = tree->fetchNode(biomePath + ":data");
+
+        for(unsigned int i = 0; i < elevationData->children.size(); i ++){
+            VOX_FileIO::Tree_Node *node = elevationData->children.at(i);
+            int lowRange = atoi(node->label.substr(0, node->label.find(":")).c_str());
+            int highRange = atoi(node->label.substr(node->label.find(":") + 1).c_str());
+            std::vector<sf::Vector2f*> data = std::vector<sf::Vector2f*>();
+            // Explode the data string into pieces, and store them into data:
+            std::string currNum("");
+            char c;
+            int key = 0, val = 0;
+            for(unsigned int j = 0; j < node->content.size(); j ++){
+                c = node->content.at(j);
+                if(c == ':'){
+                    key = atoi(currNum.c_str());
+                    currNum = "";
+                }else if(c == ','){
+                    val = atoi(currNum.c_str());
+                    currNum = "";
+                    data.push_back(new sf::Vector2f(key / 100.0, val));
+                }else{
+                    currNum += c;
+                }
+            }
+
+            val = atoi(currNum.c_str());
+            currNum = "";
+            data.push_back(new sf::Vector2f(key / 100.0, val));
+
+            if(highRange < lowRange){
+                int temp = highRange;
+                highRange = lowRange;
+                lowRange = temp;
+            }
+            for(int j = lowRange; j <= highRange; j ++){
+                elevationBlocks[j] = data;
+            }
+        }
+
+        if(!string_id.empty()) id = atoi(string_id.c_str());
+        if(!string_name.empty()) name = string_name;
+        if(!string_moisture.empty()) moisture = 1.0f / atoi(string_moisture.c_str());
+        if(!string_elevation.empty()) elevation = 1.0f / atoi(string_elevation.c_str());
+
+    }
+
+    Block Biome::getBlock(World *world, int x, int y, int z, float density){
+        double heightRange = VOX_Math::convertScale(world->height->GetNoise(x,z), -1.0f, 1.f, 0.0f, 1.f);
+        int height = (heightRange*TYPICAL_GROUND) + TYPICAL_GROUND;
+        if(height < y) return blocks[VOX_Inventory::BlockIds::AIR];
+        int id = -1;
+        // Get the block at the current position:
+        std::vector<sf::Vector2f*> elevData = elevationBlocks[y];
+        for(unsigned int i = 0; i < elevData.size(); i ++){
+            sf::Vector2f* node = elevData.at(i);
+            if(density <= node->x){
+                id = node->y;
+                break;
+            }
+        }
+        if(id == -1) id = VOX_Inventory::BlockIds::AIR;
+        if(id == VOX_Inventory::BlockIds::AIR) return blocks[VOX_Inventory::BlockIds::AIR];
+        return blocks[id];
+
+/*        float noise = VOX_Math::convertScale(world->cave->GetNoise(x * 1.0f, y * 1.0f, z * 1.0f), -1.0f, 1.0f, 0.0f, 1.0f);
+        float levelRelativeToTotalHeight = 1.0f - ((y * 1.0f) / totalHeight);
+        float acceptableNoiseLevel = VOX_Math::convertScale(levelRelativeToTotalHeight, 0.0f, 1.0f, 0.13f, .25f);
+        if(noise <= acceptableNoiseLevel){
+            float coherentNoise = VOX_Math::convertScale(world->coherent->GetNoise(x * 1.0f + this->xOffset, y * 1.0f, z * 1.0f + this->zOffset), -1.0f, 1.0f, 0.0f, 1.0f);
+            coherentNoise = ((coherentNoise) * TYPICAL_CAVE_WIDTH) + TYPICAL_CAVE_WIDTH;
+            for(int xP = x - (coherentNoise / 2); xP <= x + (coherentNoise / 2); xP ++){
+                if(xP < 0 || xP >= REGION_SIZE) continue;
+                for(int zP = z - (coherentNoise / 2); zP <= z + (coherentNoise / 2); zP ++){
+                    if(zP < 0 || zP >= REGION_SIZE) continue;
+                    for(int yP = y - (coherentNoise / 2); yP <= y + (coherentNoise / 2); yP ++){
+                        if(yP < 0 || yP >= WORLD_HEIGHT - 1) continue;
+
+                        setBlock(xP, yP, zP, VOX_Inventory::BlockIds::AIR);
+                    }
+                }
+            }
+        }*/
+    }
+
     Block::Block(){
 
     }
@@ -403,7 +428,7 @@ namespace VOX_World{
     }
 
     Biome getBiome(double elevation, double moisture){
-        return GRASSLAND;
+        return biomes[0];
     }
 
     void World::radiateLight(int x, int y, int z, int level, bool updateNeighboringRegions){
@@ -543,7 +568,9 @@ namespace VOX_World{
         if(y >= WORLD_HEIGHT || y < 0) return NULL_BLOCK;
         Region *r = getRegion(x, y, z);
         if(r != 0){
-            if(!r->loaded) return NULL_BLOCK;
+            if(!r->loaded){
+                return NULL_BLOCK;
+            }
             r->convertCoordinates(&x, &y, &z);
             return r->getBlock(x, y, z);
         }

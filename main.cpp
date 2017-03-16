@@ -31,6 +31,8 @@ int main(int argc, char **argv){
     VOX_Graphics::textureAtlas = VOX_FileIO::loadBitmapTexture("res/textures.bmp");
     VOX_World::blocks = VOX_FileIO::initBlocks();
     VOX_Inventory::items = VOX_FileIO::initItems();
+    VOX_World::biomes = VOX_FileIO::initBiomes();
+
     VOX_World::World *world = new VOX_World::World(1337);
 
     VOX_Mob::Player *player = new VOX_Mob::Player(world, 2.0f, 90.f, 2.0f);
